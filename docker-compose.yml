@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  shopware:
+    image: dockware/dev:latest
+    ports:
+      - "80:80"
+      - "3306:3306"
+      - "22:22"
+      - "8888:8888"
+      - "9999:9999"
+    volumes:
+      - ./shopware:/var/www/html
+    environment:
+      - SHOPWARE_VERSION=6.4.20.0
+      - PHP_VERSION=8.1
+      - MYSQL_USER=shopware
+      - MYSQL_PASSWORD=shopware
+      - MYSQL_DATABASE=shopware
+      - MYSQL_ROOT_PASSWORD=root
