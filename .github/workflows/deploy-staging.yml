@@ -1,0 +1,37 @@
+name: Deploy to Hetzner Staging
+
+on:
+  push:
+    branches: [ staging ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
+        
+    - name: Deploy to Hetzner Cloud
+      run: |
+        ssh -o StrictHostKeyChecking=no root@${{ secrets.HETZNER_SERVER_IP }} '
+          cd /var/www/SorcerySW6 || git clone https://github.com/yourHostJost/SorcerySW6.git /var/www/SorcerySW6
+          cd /var/www/SorcerySW6
+          git pull origin staging
+          docker compose down
+          docker compose pull
+          docker compose up -d
+          echo "Deployment completed at $(date)"
+        '
+        
+    - name: Health Check
+      run: |
+        sleep 30
+        curl -f http://${{ secrets.HETZNER_SERVER_IP }} || exit 1
+        echo "Health check passed!"

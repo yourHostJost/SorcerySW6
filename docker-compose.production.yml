@@ -1,0 +1,47 @@
+services:
+  shopware:
+    image: dockware/dev:6.6.10.4
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - PHP_VERSION=8.2
+      - MYSQL_USER=shopware
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-shopware_secure_password}
+      - MYSQL_DATABASE=shopware
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_secure_password}
+      - SHOPWARE_ENV=prod
+    volumes:
+      - shopware_data:/var/www/html
+      - shopware_mysql:/var/lib/mysql
+    networks:
+      - shopware_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Separate MySQL container for production
+  # mysql:
+  #   image: mysql:8.0
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secure_password}
+  #     MYSQL_DATABASE: shopware
+  #     MYSQL_USER: shopware
+  #     MYSQL_PASSWORD: ${MYSQL_PASSWORD:-shopware_secure_password}
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - shopware_network
+
+volumes:
+  shopware_data:
+  shopware_mysql:
+  # mysql_data:
+
+networks:
+  shopware_network:
+    driver: bridge
