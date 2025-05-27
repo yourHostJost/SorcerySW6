@@ -3,7 +3,7 @@
 # Performance testing script for Shopware 6 on Hetzner Cloud
 # Usage: ./scripts/performance-test.sh [HETZNER_IP]
 
-HETZNER_IP=${1:-"your-hetzner-ip"}
+HETZNER_IP=${1:-"91.99.27.91"}
 BASE_URL="http://$HETZNER_IP"
 
 echo "🚀 Starting performance tests for Shopware 6..."
