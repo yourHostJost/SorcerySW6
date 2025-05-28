@@ -1,0 +1,7 @@
+# Deployment Test 
+Zeitstempel: 20252805_193835 
+Test-ID: CICD-TEST-20252805_193835 
+Status: Lokale Aenderung erstellt 
+ 
+Dieser Test prueft ob GitHub Actions korrekt funktioniert. 
+Die Datei sollte nach dem Deployment auf dem Server erscheinen. 

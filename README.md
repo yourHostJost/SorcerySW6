@@ -113,3 +113,5 @@ docker-compose up -d
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
  
 <!-- Deployment Test: 28.05.2025 19:31:08,38 --> 
+ 
+<!-- CI/CD Test: 20252805_193835 --> 
