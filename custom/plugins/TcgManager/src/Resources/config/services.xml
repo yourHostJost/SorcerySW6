@@ -1,0 +1,92 @@
+<?xml version="1.0" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!-- Entity Definitions -->
+        <service id="TcgManager\Core\Content\Card\CardDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <service id="TcgManager\Core\Content\Collection\CollectionDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <service id="TcgManager\Core\Content\Collection\CollectionCardDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <service id="TcgManager\Core\Content\Deck\DeckDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <service id="TcgManager\Core\Content\DeckCard\DeckCardDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <!-- Services -->
+        <service id="TcgManager\Service\CollectionService">
+            <argument type="service" id="tcg_collection.repository"/>
+            <argument type="service" id="tcg_collection_card.repository"/>
+            <argument type="service" id="tcg_card.repository"/>
+        </service>
+
+        <service id="TcgManager\Service\DeckService">
+            <argument type="service" id="tcg_deck.repository"/>
+            <argument type="service" id="tcg_deck_card.repository"/>
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="TcgManager\Service\CollectionService"/>
+        </service>
+
+        <service id="TcgManager\Service\CardService">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+        </service>
+
+        <service id="TcgManager\Service\ShopIntegrationService">
+            <argument type="service" id="product.repository"/>
+            <argument type="service" id="sales_channel_context.factory"/>
+            <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService"/>
+            <argument type="service" id="TcgManager\Service\CardService"/>
+        </service>
+
+        <!-- API Controllers -->
+        <service id="TcgManager\Storefront\Controller\CollectionController" public="true">
+            <argument type="service" id="TcgManager\Service\CollectionService"/>
+            <argument type="service" id="TcgManager\Service\CardService"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+        </service>
+
+        <service id="TcgManager\Storefront\Controller\DeckController" public="true">
+            <argument type="service" id="TcgManager\Service\DeckService"/>
+            <argument type="service" id="TcgManager\Service\CollectionService"/>
+            <argument type="service" id="TcgManager\Service\ShopIntegrationService"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+        </service>
+
+        <!-- Admin API Controllers -->
+        <service id="TcgManager\Administration\Controller\CardController" public="true">
+            <argument type="service" id="TcgManager\Service\CardService"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+        </service>
+
+        <!-- Data Fixtures -->
+        <service id="TcgManager\DataFixtures\CardFixtures">
+            <argument type="service" id="TcgManager\Service\CardService"/>
+            <tag name="tcg_manager.fixture"/>
+        </service>
+
+        <!-- Event Subscribers -->
+        <service id="TcgManager\Subscriber\CustomerRegistrationSubscriber">
+            <argument type="service" id="TcgManager\Service\CollectionService"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+    </services>
+</container>

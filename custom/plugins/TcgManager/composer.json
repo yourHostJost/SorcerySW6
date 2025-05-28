@@ -1,0 +1,30 @@
+{
+    "name": "tcg/manager",
+    "description": "Trading Card Game Manager Plugin for Shopware 6",
+    "type": "shopware-platform-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "TcgManager Development Team"
+        }
+    ],
+    "require": {
+        "shopware/core": "~6.4.0|~6.5.0|~6.6.0"
+    },
+    "extra": {
+        "shopware-plugin-class": "TcgManager\\TcgManager",
+        "label": {
+            "de-DE": "Trading Card Game Manager",
+            "en-GB": "Trading Card Game Manager"
+        },
+        "description": {
+            "de-DE": "Umfassendes Plugin für Trading Card Game Sammler und Spieler mit Kartenorganizer, Deck-Management und Shop-Integration",
+            "en-GB": "Comprehensive plugin for Trading Card Game collectors and players with card organizer, deck management and shop integration"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "TcgManager\\": "src/"
+        }
+    }
+}

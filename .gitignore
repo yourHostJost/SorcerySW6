@@ -16,6 +16,9 @@
 /config/jwt/
 /config/secrets/
 
+# Custom plugins development (exclude from production)
+!/custom/plugins/TcgManager/
+
 # Docker
 /.docker/
 /docker-data/

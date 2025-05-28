@@ -31,13 +31,24 @@ jobs:
           # Wait for containers to start
           sleep 30
 
-          # Configure Shopware domain
+          # Configure Shopware and apply performance optimizations
           CONTAINER_NAME=$(docker ps --format "{{.Names}}" | grep shopware | head -1)
           if [ ! -z "$CONTAINER_NAME" ]; then
             docker exec $CONTAINER_NAME bash -c "
               cd /var/www/html
+
+              # Clear and warm up caches
               php bin/console cache:clear --env=prod || true
-              echo \"Domain configuration completed\"
+              php bin/console cache:warmup --env=prod || true
+
+              # Apply performance configurations
+              php bin/console system:config:set core.httpCache.enabled true || true
+              php bin/console system:config:set core.httpCache.ttl 3600 || true
+              php bin/console system:config:set core.template.cache true || true
+              php bin/console system:config:set core.response.compression true || true
+              php bin/console system:config:set core.kernel.debug false || true
+
+              echo \"Performance optimizations applied\"
             "
           fi
 
