@@ -2,6 +2,12 @@
 
 A Docker-based Shopware 6 development environment using Dockware.
 
+## 🌐 Production Environment
+- **Live Site:** http://91.99.27.91
+- **Admin Panel:** http://91.99.27.91/admin
+- **Auto-Deployment:** GitHub Actions → Hetzner Cloud
+- **Last Update:** $(date)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -26,7 +32,7 @@ docker-compose up -d
 4. Access your Shopware 6 installation:
    - **Frontend**: http://localhost
    - **Admin Panel**: http://localhost/admin
-   - **Default Admin Credentials**: 
+   - **Default Admin Credentials**:
      - Username: `admin`
      - Password: `shopware`
 
