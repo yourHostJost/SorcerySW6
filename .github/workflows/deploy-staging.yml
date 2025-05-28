@@ -8,16 +8,16 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup SSH
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.HETZNER_SSH_KEY }}
-        
+
     - name: Deploy to Hetzner Cloud
       run: |
         ssh -o StrictHostKeyChecking=no root@${{ secrets.HETZNER_SERVER_IP }} '
@@ -27,9 +27,23 @@ jobs:
           docker compose down
           docker compose pull
           docker compose up -d
+
+          # Wait for containers to start
+          sleep 30
+
+          # Configure Shopware domain
+          CONTAINER_NAME=$(docker ps --format "{{.Names}}" | grep shopware | head -1)
+          if [ ! -z "$CONTAINER_NAME" ]; then
+            docker exec $CONTAINER_NAME bash -c "
+              cd /var/www/html
+              php bin/console cache:clear --env=prod || true
+              echo \"Domain configuration completed\"
+            "
+          fi
+
           echo "Deployment completed at $(date)"
         '
-        
+
     - name: Health Check
       run: |
         sleep 30

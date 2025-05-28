@@ -53,6 +53,18 @@ ssh $HETZNER_USER@$HETZNER_IP << EOF
     echo "⏳ Waiting for services to start..."
     sleep 30
 
+    # Configure Shopware domain
+    echo "🔧 Configuring Shopware domain..."
+    docker exec \$(docker ps --format "{{.Names}}" | grep shopware | head -1) bash -c "
+        cd /var/www/html
+        # Add the server IP as a valid domain
+        php bin/console sales-channel:update:domain --url='http://$HETZNER_IP' || true
+        # Alternative: Create new sales channel if needed
+        php bin/console sales-channel:create:storefront --name='Production' --url='http://$HETZNER_IP' || true
+        # Clear cache
+        php bin/console cache:clear
+    "
+
     # Health check
     echo "🏥 Performing health check..."
     curl -f http://localhost || {
