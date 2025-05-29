@@ -37,7 +37,10 @@ class CollectionController extends StorefrontController
     #[Route(path: '/account/tcg/collections', name: 'frontend.account.tcg.collections', methods: ['GET'])]
     public function collectionsPage(Request $request, SalesChannelContext $context): Response
     {
-        $this->denyAccessUnlessLoggedIn($context);
+        // Check if user is logged in
+        if (!$context->getCustomer()) {
+            return $this->redirectToRoute('frontend.account.login.page');
+        }
 
         $customerId = $context->getCustomer()->getId();
         $collections = $this->collectionService->getCustomerCollections($customerId, $context->getContext());
@@ -72,7 +75,10 @@ class CollectionController extends StorefrontController
     #[Route(path: '/account/tcg/collections/{collectionId}', name: 'frontend.account.tcg.collection.detail', methods: ['GET'])]
     public function collectionDetail(string $collectionId, Request $request, SalesChannelContext $context): Response
     {
-        $this->denyAccessUnlessLoggedIn($context);
+        // Check if user is logged in
+        if (!$context->getCustomer()) {
+            return $this->redirectToRoute('frontend.account.login.page');
+        }
 
         // TODO: Add security check to ensure customer owns this collection
 
@@ -121,27 +127,17 @@ class CollectionController extends StorefrontController
         ]);
     }
 
-    #[Route(path: '/account/tcg/collections/{collectionId}/api', name: 'frontend.account.tcg.collections.api', methods: ['GET'], defaults: ['_routeScope' => ['storefront']])]
+    #[Route(path: '/account/tcg/collections/{collectionId}/api', name: 'frontend.account.tcg.collections.api', methods: ['GET'], defaults: ['_routeScope' => ['storefront'], 'csrf_protected' => false, 'XmlHttpRequest' => true])]
     public function getCollectionDetail(string $collectionId, Request $request, SalesChannelContext $context): JsonResponse
     {
-        // Simple test first - return dummy data
-        return new JsonResponse([
-            'success' => true,
-            'data' => [
-                'id' => $collectionId,
-                'name' => 'Test Collection',
-                'description' => 'This is a test collection',
-                'isPublic' => false,
-                'isDefault' => false,
-                'createdAt' => date('Y-m-d H:i:s'),
-                'cardCount' => 0
-            ]
-        ]);
-
-        /*
         try {
-            // Check if user is logged in
+            // Debug information
+            error_log("DEBUG: Collection detail API route reached for ID: " . $collectionId);
+            error_log("DEBUG: Customer: " . ($context->getCustomer() ? $context->getCustomer()->getId() : 'NULL'));
+
+            // Check if user is logged in (same approach as working DeckController)
             if (!$context->getCustomer()) {
+                error_log("DEBUG: Customer not logged in");
                 return new JsonResponse([
                     'success' => false,
                     'message' => 'Nicht angemeldet'
@@ -176,27 +172,42 @@ class CollectionController extends StorefrontController
                 'cardCount' => $collection->getCollectionCards() ? $collection->getCollectionCards()->count() : 0,
             ];
 
-            error_log("DEBUG: Collection data loaded successfully: " . json_encode($collectionData));
-
             return new JsonResponse([
                 'success' => true,
                 'data' => $collectionData
             ]);
         } catch (\Exception $e) {
-            error_log("DEBUG: Exception in getCollectionDetail: " . $e->getMessage());
-            error_log("DEBUG: Exception trace: " . $e->getTraceAsString());
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Fehler beim Laden der Sammlung: ' . $e->getMessage()
             ], 500);
         }
-        */
     }
 
-    #[Route(path: '/account/tcg/collections/create', name: 'frontend.account.tcg.collections.create', methods: ['POST'], defaults: ['_routeScope' => ['storefront'], 'XmlHttpRequest' => true])]
+    #[Route(path: '/account/tcg/test-auth', name: 'frontend.account.tcg.test.auth', methods: ['GET'], defaults: ['_routeScope' => ['storefront']])]
+    public function testAuth(Request $request, SalesChannelContext $context): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Authentication test successful',
+            'customer' => $context->getCustomer() ? [
+                'id' => $context->getCustomer()->getId(),
+                'email' => $context->getCustomer()->getEmail()
+            ] : null,
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    #[Route(path: '/account/tcg/collections/create', name: 'frontend.account.tcg.collections.create', methods: ['POST'], defaults: ['_routeScope' => ['storefront'], 'csrf_protected' => false, 'XmlHttpRequest' => true])]
     public function createCollection(Request $request, SalesChannelContext $context): JsonResponse
     {
-        $this->denyAccessUnlessLoggedIn($context);
+        // Check if user is logged in
+        if (!$context->getCustomer()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Nicht angemeldet'
+            ], 401);
+        }
 
         // Handle both JSON and form data
         $contentType = $request->headers->get('Content-Type', '');

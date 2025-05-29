@@ -42,7 +42,10 @@ class DeckController extends StorefrontController
     #[Route(path: '/account/tcg/decks', name: 'frontend.account.tcg.decks', methods: ['GET'])]
     public function decksPage(Request $request, SalesChannelContext $context): Response
     {
-        $this->denyAccessUnlessLoggedIn($context);
+        // Check if user is logged in
+        if (!$context->getCustomer()) {
+            return $this->redirectToRoute('frontend.account.login.page');
+        }
 
         $customerId = $context->getCustomer()->getId();
         $decks = $this->deckService->getCustomerDecks($customerId, $context->getContext());
@@ -83,7 +86,10 @@ class DeckController extends StorefrontController
     #[Route(path: '/account/tcg/deck/{deckId}', name: 'frontend.account.tcg.deck.detail', methods: ['GET'])]
     public function deckDetail(string $deckId, Request $request, SalesChannelContext $context): Response
     {
-        $this->denyAccessUnlessLoggedIn($context);
+        // Check if user is logged in
+        if (!$context->getCustomer()) {
+            return $this->redirectToRoute('frontend.account.login.page');
+        }
 
         // TODO: Add security check to ensure customer owns this deck
 
@@ -168,7 +174,13 @@ class DeckController extends StorefrontController
     #[Route(path: '/api/tcg/decks', name: 'api.tcg.decks.list', methods: ['GET'], defaults: ['_routeScope' => ['storefront']])]
     public function getDecks(Request $request, SalesChannelContext $context): JsonResponse
     {
-        $this->denyAccessUnlessLoggedIn($context);
+        // Check if user is logged in
+        if (!$context->getCustomer()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Nicht angemeldet'
+            ], 401);
+        }
 
         $customerId = $context->getCustomer()->getId();
         $decks = $this->deckService->getCustomerDecks($customerId, $context->getContext());
@@ -197,10 +209,16 @@ class DeckController extends StorefrontController
         ]);
     }
 
-    #[Route(path: '/account/tcg/decks/create', name: 'frontend.account.tcg.decks.create', methods: ['POST'], defaults: ['_routeScope' => ['storefront'], 'XmlHttpRequest' => true])]
+    #[Route(path: '/account/tcg/decks/create', name: 'frontend.account.tcg.decks.create', methods: ['POST'], defaults: ['_routeScope' => ['storefront'], 'csrf_protected' => false])]
     public function createDeck(Request $request, SalesChannelContext $context): JsonResponse
     {
-        $this->denyAccessUnlessLoggedIn($context);
+        // Check if user is logged in (same approach as working API routes)
+        if (!$context->getCustomer()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Nicht angemeldet'
+            ], 401);
+        }
 
         // Handle both JSON and form data
         $contentType = $request->headers->get('Content-Type', '');
@@ -267,7 +285,13 @@ class DeckController extends StorefrontController
     #[Route(path: '/api/tcg/decks/{deckId}/compare', name: 'api.tcg.decks.compare', methods: ['GET'], defaults: ['_routeScope' => ['storefront']])]
     public function compareDeckWithCollection(string $deckId, Request $request, SalesChannelContext $context): JsonResponse
     {
-        $this->denyAccessUnlessLoggedIn($context);
+        // Check if user is logged in
+        if (!$context->getCustomer()) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Nicht angemeldet'
+            ], 401);
+        }
 
         $customerId = $context->getCustomer()->getId();
 

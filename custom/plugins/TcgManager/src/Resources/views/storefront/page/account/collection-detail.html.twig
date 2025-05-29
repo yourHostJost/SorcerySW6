@@ -129,7 +129,8 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
-                }
+                },
+                credentials: 'same-origin'  // Include cookies/session
             })
             .then(response => {
                 console.log('Response status:', response.status);

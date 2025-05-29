@@ -168,46 +168,30 @@
     {{ parent() }}
 
     <script>
-        // Get CSRF token from multiple possible sources
-        function getCSRFToken() {
-            // Try different meta tag names
-            let token = document.querySelector('meta[name="_csrf_token"]')?.getAttribute('content');
-            if (!token) token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            if (!token) token = document.querySelector('meta[name="_token"]')?.getAttribute('content');
-
-            // Try to get from form if available
-            if (!token) {
-                const tokenInput = document.querySelector('input[name="_token"]');
-                if (tokenInput) token = tokenInput.value;
-            }
-
-            return token || '';
-        }
+        // Simplified - no CSRF token needed since route has csrf_protected=false
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Collections page loaded'); // Debug
-            const csrfToken = getCSRFToken();
-            console.log('CSRF Token:', csrfToken); // Debug
+            console.log('Collections page loaded');
 
             // Create collection form handler
             const createForm = document.getElementById('createCollectionForm');
-            console.log('Create form found:', createForm); // Debug
+            console.log('Create form found:', createForm);
 
             if (createForm) {
                 createForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    console.log('Form submitted'); // Debug
+                    console.log('Form submitted');
 
                     const formData = new FormData(createForm);
-
-                    console.log('Sending collection form data'); // Debug
+                    console.log('Form data prepared');
 
                     fetch('/account/tcg/collections/create', {
                         method: 'POST',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: formData
+                        body: formData,
+                        credentials: 'same-origin'  // Include cookies/session
                     })
                     .then(response => {
                         console.log('Response received:', response); // Debug
