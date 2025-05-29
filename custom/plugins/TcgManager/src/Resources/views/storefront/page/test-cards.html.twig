@@ -1,0 +1,325 @@
+{% sw_extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_main %}
+    <div class="container mt-4">
+        <h1>🃏 TCG Manager - Kartendaten Test</h1>
+        <p class="lead">Test der importierten Sorcery: Contested Realm Kartendaten</p>
+
+        {% if debug %}
+            <div class="alert alert-info">
+                <strong>🔍 Debug-Info:</strong>
+                Karten gefunden: {{ debug.cardsFound }} |
+                Karten verarbeitet: {{ debug.cardsProcessed }} |
+                Context gültig: {{ debug.contextValid ? 'Ja' : 'Nein' }}
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🔍 Karten suchen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="searchTerm" class="form-label">Kartenname</label>
+                            <input type="text" class="form-control" id="searchTerm" placeholder="z.B. Sir Lancelot">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edition" class="form-label">Edition</label>
+                            <select class="form-control" id="edition">
+                                <option value="">Alle Editionen</option>
+                                <option value="Alpha">Alpha</option>
+                                <option value="Beta">Beta</option>
+                                <option value="Arthurian Legends">Arthurian Legends</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="rarity" class="form-label">Seltenheit</label>
+                            <select class="form-control" id="rarity">
+                                <option value="">Alle Seltenheiten</option>
+                                <option value="Ordinary">Ordinary</option>
+                                <option value="Elite">Elite</option>
+                                <option value="Exceptional">Exceptional</option>
+                                <option value="Unique">Unique</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="searchCards()">Suchen</button>
+                        <button type="button" class="btn btn-secondary" onclick="loadRandomCards()">Zufällige Karten</button>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>📊 Statistiken</h5>
+                    </div>
+                    <div class="card-body" id="statsContainer">
+                        <p class="text-muted">Lade Statistiken...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>🎮 Kartenergebnisse</h5>
+                        <span class="badge badge-info" id="resultCount">0 Karten</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingIndicator" class="text-center" style="display: none;">
+                            <div class="spinner-border" role="status">
+                                <span class="sr-only">Laden...</span>
+                            </div>
+                            <p class="mt-2">Lade Kartendaten...</p>
+                        </div>
+
+                        <div id="cardsContainer">
+                            {% if sampleCards %}
+                                <h6>📋 Beispiel-Karten (Server-seitig geladen):</h6>
+                                <div class="row">
+                                    {% for card in sampleCards %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-header">
+                                                    <h6 class="card-title mb-0">{{ card.title }}</h6>
+                                                    <small class="text-muted">{{ card.edition }} - {{ card.rarity|default('N/A') }}</small>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <strong>Kosten:</strong> {{ card.cost|default('N/A') }}<br>
+                                                            <strong>Angriff:</strong> {{ card.attack|default('N/A') }}<br>
+                                                            <strong>Verteidigung:</strong> {{ card.defence|default('N/A') }}<br>
+                                                            <strong>Leben:</strong> {{ card.life|default('N/A') }}
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <strong>Elemente:</strong> {{ card.elements|default('None') }}<br>
+                                                            <strong>Typ:</strong> {{ card.cardType|default('N/A') }}<br>
+                                                            <strong>Untertyp:</strong> {{ card.subTypes|default('N/A') }}<br>
+                                                            <strong>Finish:</strong> {{ card.finish|default('N/A') }}
+                                                        </div>
+                                                    </div>
+                                                    {% if card.description %}
+                                                        <p class="mt-2 small text-muted">{{ card.description }}</p>
+                                                    {% endif %}
+                                                    {% if card.flavorText %}
+                                                        <p class="mt-1 small font-italic">"{{ card.flavorText }}"</p>
+                                                    {% endif %}
+                                                    {% if card.artist %}
+                                                        <p class="mt-1 small"><strong>Künstler:</strong> {{ card.artist }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="card-footer">
+                                                    <small class="text-muted">
+                                                        API: {{ card.apiSource|default('N/A') }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <hr>
+                                <h6>🔄 AJAX-Test (falls API funktioniert):</h6>
+                            {% else %}
+                                <p class="text-muted">Klicke auf "Zufällige Karten" um zu beginnen.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRandomCards();
+        });
+
+        function showLoading() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('cardsContainer').innerHTML = '';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        function searchCards() {
+            showLoading();
+
+            const searchTerm = document.getElementById('searchTerm').value;
+            const edition = document.getElementById('edition').value;
+            const rarity = document.getElementById('rarity').value;
+
+            let url = '/tcg/cards-api?limit=20';
+            if (searchTerm) url += '&q=' + encodeURIComponent(searchTerm);
+            if (edition) url += '&edition=' + encodeURIComponent(edition);
+            if (rarity) url += '&rarity=' + encodeURIComponent(rarity);
+
+            console.log('Fetching URL:', url);
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                return response.text().then(text => {
+                    console.log('Response text:', text);
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('JSON parse error:', e);
+                        throw new Error('Invalid JSON response: ' + text);
+                    }
+                });
+            })
+            .then(data => {
+                console.log('Parsed data:', data);
+                hideLoading();
+                if (data.success) {
+                    displayCards(data.data);
+                    updateResultCount(data.data.length);
+                } else {
+                    displayError('Fehler beim Laden der Karten: ' + (data.message || 'Unbekannter Fehler'));
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                hideLoading();
+                displayError('Netzwerkfehler: ' + error.message);
+            });
+        }
+
+        function loadRandomCards() {
+            showLoading();
+
+            const url = '/tcg/cards-api?limit=10';
+            console.log('Loading random cards from:', url);
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                console.log('Random cards response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                return response.text().then(text => {
+                    console.log('Random cards response text:', text);
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('JSON parse error:', e);
+                        throw new Error('Invalid JSON response: ' + text);
+                    }
+                });
+            })
+            .then(data => {
+                console.log('Random cards parsed data:', data);
+                hideLoading();
+                if (data.success) {
+                    displayCards(data.data);
+                    updateResultCount(data.data.length);
+                } else {
+                    displayError('Fehler beim Laden der Karten: ' + (data.message || 'Unbekannter Fehler'));
+                }
+            })
+            .catch(error => {
+                console.error('Random cards fetch error:', error);
+                hideLoading();
+                displayError('Netzwerkfehler: ' + error.message);
+            });
+        }
+
+        function displayCards(cards) {
+            const container = document.getElementById('cardsContainer');
+
+            if (cards.length === 0) {
+                container.innerHTML = '<p class="text-muted">Keine Karten gefunden.</p>';
+                return;
+            }
+
+            let html = '<div class="row">';
+            cards.forEach(card => {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">${card.title}</h6>
+                                <small class="text-muted">${card.edition} - ${card.rarity || 'N/A'}</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>Kosten:</strong> ${card.cost || 'N/A'}<br>
+                                        <strong>Angriff:</strong> ${card.attack || 'N/A'}<br>
+                                        <strong>Verteidigung:</strong> ${card.defence || 'N/A'}<br>
+                                        <strong>Leben:</strong> ${card.life || 'N/A'}
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Elemente:</strong> ${card.elements || 'None'}<br>
+                                        <strong>Typ:</strong> ${card.cardType || 'N/A'}<br>
+                                        <strong>Untertyp:</strong> ${card.subTypes || 'N/A'}<br>
+                                        <strong>Finish:</strong> ${card.finish || 'N/A'}
+                                    </div>
+                                </div>
+                                ${card.description ? `<p class="mt-2 small text-muted">${card.description}</p>` : ''}
+                                ${card.flavorText ? `<p class="mt-1 small font-italic">"${card.flavorText}"</p>` : ''}
+                                ${card.artist ? `<p class="mt-1 small"><strong>Künstler:</strong> ${card.artist}</p>` : ''}
+                                ${card.thresholds ? `<p class="mt-1 small"><strong>Schwellenwerte:</strong> ${JSON.stringify(card.thresholds)}</p>` : ''}
+                            </div>
+                            <div class="card-footer">
+                                <small class="text-muted">
+                                    API: ${card.apiSource || 'N/A'} |
+                                    Letztes Update: ${card.lastApiUpdate || 'N/A'}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function displayError(message) {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+        }
+
+        function updateResultCount(count) {
+            document.getElementById('resultCount').textContent = count + ' Karten';
+        }
+    </script>
+
+    <style>
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .card-header h6 {
+            color: #495057;
+        }
+
+        .badge-info {
+            background-color: #17a2b8;
+        }
+    </style>
+{% endblock %}

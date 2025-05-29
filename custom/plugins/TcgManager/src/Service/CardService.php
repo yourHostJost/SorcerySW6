@@ -56,40 +56,56 @@ class CardService
         bool $inStockOnly = false,
         int $limit = 20,
         int $offset = 0,
-        Context $context = null
+        Context $context = null,
+        ?string $elements = null,
+        ?int $minCost = null,
+        ?int $maxCost = null
     ): CardCollection {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
-        
+
         // Search term filter (title, description)
         if ($searchTerm) {
             $criteria->addFilter(new ContainsFilter('title', $searchTerm));
         }
-        
+
         // Edition filter
         if ($edition) {
             $criteria->addFilter(new EqualsFilter('edition', $edition));
         }
-        
+
         // Rarity filter
         if ($rarity) {
             $criteria->addFilter(new EqualsFilter('rarity', $rarity));
         }
-        
+
         // Card type filter
         if ($cardType) {
             $criteria->addFilter(new ContainsFilter('cardType', $cardType));
         }
-        
-        // Threshold cost range
+
+        // Threshold cost range (legacy)
         if ($minThresholdCost !== null || $maxThresholdCost !== null) {
             $criteria->addFilter(new RangeFilter('thresholdCost', [
                 RangeFilter::GTE => $minThresholdCost,
                 RangeFilter::LTE => $maxThresholdCost,
             ]));
         }
-        
+
+        // Sorcery cost range (new)
+        if ($minCost !== null || $maxCost !== null) {
+            $criteria->addFilter(new RangeFilter('cost', [
+                RangeFilter::GTE => $minCost,
+                RangeFilter::LTE => $maxCost,
+            ]));
+        }
+
+        // Elements filter
+        if ($elements) {
+            $criteria->addFilter(new ContainsFilter('elements', $elements));
+        }
+
         // Price range
         if ($minPrice !== null || $maxPrice !== null) {
             $criteria->addFilter(new RangeFilter('marketPrice', [
@@ -97,23 +113,23 @@ class CardService
                 RangeFilter::LTE => $maxPrice,
             ]));
         }
-        
+
         // In stock only
         if ($inStockOnly) {
             $criteria->addFilter(new RangeFilter('stockQuantity', [
                 RangeFilter::GT => 0,
             ]));
         }
-        
+
         // Sorting
         $criteria->addSorting(new FieldSorting('title', FieldSorting::ASCENDING));
-        
+
         // Pagination
         $criteria->setLimit($limit);
         $criteria->setOffset($offset);
 
         $result = $this->cardRepository->search($criteria, $context);
-        
+
         return $result->getEntities();
     }
 
@@ -123,13 +139,13 @@ class CardService
     public function getCardsByEdition(string $edition, Context $context = null): CardCollection
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter('edition', $edition));
         $criteria->addSorting(new FieldSorting('cardNumber', FieldSorting::ASCENDING));
 
         $result = $this->cardRepository->search($criteria, $context);
-        
+
         return $result->getEntities();
     }
 
@@ -139,13 +155,13 @@ class CardService
     public function getAvailableEditions(Context $context = null): array
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addGroupField('edition');
         $criteria->addSorting(new FieldSorting('edition', FieldSorting::ASCENDING));
 
         $result = $this->cardRepository->search($criteria, $context);
-        
+
         $editions = [];
         foreach ($result->getEntities() as $card) {
             $edition = $card->getEdition();
@@ -153,7 +169,7 @@ class CardService
                 $editions[] = $edition;
             }
         }
-        
+
         return $editions;
     }
 
@@ -163,13 +179,13 @@ class CardService
     public function getAvailableRarities(Context $context = null): array
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addGroupField('rarity');
         $criteria->addSorting(new FieldSorting('rarity', FieldSorting::ASCENDING));
 
         $result = $this->cardRepository->search($criteria, $context);
-        
+
         $rarities = [];
         foreach ($result->getEntities() as $card) {
             $rarity = $card->getRarity();
@@ -177,7 +193,7 @@ class CardService
                 $rarities[] = $rarity;
             }
         }
-        
+
         return $rarities;
     }
 
@@ -187,13 +203,13 @@ class CardService
     public function getAvailableCardTypes(Context $context = null): array
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addGroupField('cardType');
         $criteria->addSorting(new FieldSorting('cardType', FieldSorting::ASCENDING));
 
         $result = $this->cardRepository->search($criteria, $context);
-        
+
         $cardTypes = [];
         foreach ($result->getEntities() as $card) {
             $cardType = $card->getCardType();
@@ -201,7 +217,7 @@ class CardService
                 $cardTypes[] = $cardType;
             }
         }
-        
+
         return $cardTypes;
     }
 
@@ -211,7 +227,7 @@ class CardService
     public function updateCardStock(string $cardId, int $newQuantity, Context $context = null): bool
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         try {
             $this->cardRepository->update([
                 [
@@ -220,7 +236,7 @@ class CardService
                     'updatedAt' => new \DateTime(),
                 ]
             ], $context);
-            
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -233,7 +249,7 @@ class CardService
     public function getCardsInStock(int $limit = 50, Context $context = null): CardCollection
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addFilter(new RangeFilter('stockQuantity', [
             RangeFilter::GT => 0,
@@ -242,7 +258,7 @@ class CardService
         $criteria->setLimit($limit);
 
         $result = $this->cardRepository->search($criteria, $context);
-        
+
         return $result->getEntities();
     }
 
@@ -252,7 +268,7 @@ class CardService
     public function getFeaturedCards(int $limit = 10, Context $context = null): CardCollection
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addFilter(new RangeFilter('stockQuantity', [
             RangeFilter::GT => 0,
@@ -264,11 +280,11 @@ class CardService
 
         $result = $this->cardRepository->search($criteria, $context);
         $cards = $result->getEntities()->getElements();
-        
+
         // Shuffle and limit
         shuffle($cards);
         $featuredCards = array_slice($cards, 0, $limit);
-        
+
         return new CardCollection($featuredCards);
     }
 }

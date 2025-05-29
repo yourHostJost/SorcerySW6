@@ -127,6 +127,70 @@ class CollectionController extends StorefrontController
         ]);
     }
 
+    #[Route(path: '/tcg/test-cards', name: 'tcg.test.cards', methods: ['GET'])]
+    public function testCardsPage(Request $request): Response
+    {
+        // Load some sample cards directly for testing
+        $context = Context::createDefaultContext();
+
+        try {
+            $sampleCards = $this->cardService->searchCards(
+                null, // searchTerm
+                null, // edition
+                null, // rarity
+                null, // cardType
+                null, // minThresholdCost
+                null, // maxThresholdCost
+                null, // minPrice
+                null, // maxPrice
+                false, // inStockOnly
+                10, // limit
+                0, // offset
+                $context, // context
+                null, // elements
+                null, // minCost
+                null  // maxCost
+            );
+        } catch (\Exception $e) {
+            // Fallback: create some dummy data to show the template works
+            $sampleCards = [];
+        }
+
+        $cardsData = [];
+        foreach ($sampleCards as $card) {
+            $cardsData[] = [
+                'id' => $card->getId(),
+                'title' => $card->getTitle(),
+                'edition' => $card->getEdition(),
+                'rarity' => $card->getRarity(),
+                'cardType' => $card->getCardType(),
+                'description' => $card->getDescription(),
+                'cost' => $card->getCost(),
+                'attack' => $card->getAttack(),
+                'defence' => $card->getDefence(),
+                'life' => $card->getLife(),
+                'elements' => $card->getElements(),
+                'subTypes' => $card->getSubTypes(),
+                'artist' => $card->getArtist(),
+                'flavorText' => $card->getFlavorText(),
+                'finish' => $card->getFinish(),
+                'apiSource' => $card->getApiSource(),
+            ];
+        }
+
+        return $this->renderStorefront('@TcgManager/storefront/page/test-cards.html.twig', [
+            'page' => [
+                'title' => 'TCG Manager - Kartendaten Test'
+            ],
+            'sampleCards' => $cardsData,
+            'debug' => [
+                'cardsFound' => count($sampleCards),
+                'cardsProcessed' => count($cardsData),
+                'contextValid' => $context !== null
+            ]
+        ]);
+    }
+
     #[Route(path: '/account/tcg/collections/{collectionId}/api', name: 'frontend.account.tcg.collections.api', methods: ['GET'], defaults: ['_routeScope' => ['storefront'], 'csrf_protected' => false, 'XmlHttpRequest' => true])]
     public function getCollectionDetail(string $collectionId, Request $request, SalesChannelContext $context): JsonResponse
     {
@@ -351,34 +415,50 @@ class CollectionController extends StorefrontController
         }
     }
 
-    #[Route(path: '/api/tcg/cards/search', name: 'api.tcg.cards.search', methods: ['GET'])]
-    public function searchCards(Request $request, SalesChannelContext $context): JsonResponse
+    #[Route(path: '/tcg/cards-api', name: 'tcg.cards.api', methods: ['GET'], defaults: ['csrf_protected' => false, 'auth_required' => false])]
+    public function searchCardsPublic(Request $request): JsonResponse
     {
+        // Note: This is a public API endpoint - no authentication required for card search
+        // Remove any authentication checks for this public endpoint
         $searchTerm = $request->query->get('q');
         $edition = $request->query->get('edition');
         $rarity = $request->query->get('rarity');
         $cardType = $request->query->get('type');
+        $elements = $request->query->get('elements');
+
+        // Legacy threshold cost parameters
+        $minThresholdCost = $request->query->getInt('minThresholdCost');
+        $maxThresholdCost = $request->query->getInt('maxThresholdCost');
+
+        // New Sorcery cost parameters
         $minCost = $request->query->getInt('minCost');
         $maxCost = $request->query->getInt('maxCost');
+
         $minPrice = $request->query->get('minPrice') ? (float) $request->query->get('minPrice') : null;
         $maxPrice = $request->query->get('maxPrice') ? (float) $request->query->get('maxPrice') : null;
         $inStockOnly = $request->query->getBoolean('inStock', false);
         $limit = $request->query->getInt('limit', 20);
         $offset = $request->query->getInt('offset', 0);
 
+        // Create a default context for public API access
+        $context = Context::createDefaultContext();
+
         $cards = $this->cardService->searchCards(
             $searchTerm,
             $edition,
             $rarity,
             $cardType,
-            $minCost ?: null,
-            $maxCost ?: null,
+            $minThresholdCost ?: null,
+            $maxThresholdCost ?: null,
             $minPrice,
             $maxPrice,
             $inStockOnly,
             $limit,
             $offset,
-            $context->getContext()
+            $context,
+            $elements,
+            $minCost ?: null,
+            $maxCost ?: null
         );
 
         $cardsData = [];
@@ -387,20 +467,43 @@ class CollectionController extends StorefrontController
                 'id' => $card->getId(),
                 'title' => $card->getTitle(),
                 'edition' => $card->getEdition(),
-                'thresholdCost' => $card->getThresholdCost(),
-                'manaCost' => $card->getManaCost(),
                 'rarity' => $card->getRarity(),
                 'cardType' => $card->getCardType(),
                 'description' => $card->getDescription(),
+
+                // Sorcery-specific fields
+                'cost' => $card->getCost(),
+                'attack' => $card->getAttack(),
+                'defence' => $card->getDefence(),
+                'life' => $card->getLife(),
+                'thresholds' => $card->getThresholds(),
+                'elements' => $card->getElements(),
+                'subTypes' => $card->getSubTypes(),
+
+                // Set and variant information
+                'artist' => $card->getArtist(),
+                'flavorText' => $card->getFlavorText(),
+                'finish' => $card->getFinish(),
+                'product' => $card->getProduct(),
+
+                // Legacy fields
+                'thresholdCost' => $card->getThresholdCost(),
+                'manaCost' => $card->getManaCost(),
+                'setCode' => $card->getSetCode(),
+                'cardNumber' => $card->getCardNumber(),
+
+                // Shop integration
                 'imageUrl' => $card->getImageUrl(),
                 'marketPrice' => $card->getMarketPrice(),
                 'stockQuantity' => $card->getStockQuantity(),
-                'setCode' => $card->getSetCode(),
-                'cardNumber' => $card->getCardNumber(),
+
+                // API integration
+                'apiSource' => $card->getApiSource(),
+                'lastApiUpdate' => $card->getLastApiUpdate() ? $card->getLastApiUpdate()->format('Y-m-d H:i:s') : null,
             ];
         }
 
-        return new JsonResponse([
+        $response = new JsonResponse([
             'success' => true,
             'data' => $cardsData,
             'meta' => [
@@ -409,5 +512,12 @@ class CollectionController extends StorefrontController
                 'offset' => $offset
             ]
         ]);
+
+        // Add CORS headers for browser compatibility
+        $response->headers->set('Access-Control-Allow-Origin', '*');
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Accept, X-Requested-With');
+
+        return $response;
     }
 }

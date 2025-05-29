@@ -87,6 +87,24 @@
             </call>
         </service>
 
+        <!-- API Import Services -->
+        <service id="TcgManager\Service\SorceryApiImportService">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="Symfony\Contracts\HttpClient\HttpClientInterface"/>
+            <argument type="service" id="logger"/>
+        </service>
+
+        <!-- Console Commands -->
+        <service id="TcgManager\Command\ImportSorceryCardsCommand">
+            <argument type="service" id="TcgManager\Service\SorceryApiImportService"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\TestCardsCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <tag name="console.command"/>
+        </service>
+
         <!-- Data Fixtures -->
         <service id="TcgManager\DataFixtures\CardFixtures">
             <argument type="service" id="TcgManager\Service\CardService"/>

@@ -46,6 +46,79 @@ class CardEntity extends Entity
      */
     protected $description;
 
+    // Sorcery-specific game mechanics
+    /**
+     * @var int|null
+     */
+    protected $cost;
+
+    /**
+     * @var int|null
+     */
+    protected $attack;
+
+    /**
+     * @var int|null
+     */
+    protected $defence;
+
+    /**
+     * @var int|null
+     */
+    protected $life;
+
+    /**
+     * @var array|null
+     */
+    protected $thresholds;
+
+    /**
+     * @var string|null
+     */
+    protected $elements;
+
+    /**
+     * @var string|null
+     */
+    protected $subTypes;
+
+    // Set and variant information
+    /**
+     * @var \DateTimeInterface|null
+     */
+    protected $releaseDate;
+
+    /**
+     * @var string|null
+     */
+    protected $variantSlug;
+
+    /**
+     * @var string|null
+     */
+    protected $finish;
+
+    /**
+     * @var string|null
+     */
+    protected $product;
+
+    /**
+     * @var string|null
+     */
+    protected $artist;
+
+    /**
+     * @var string|null
+     */
+    protected $flavorText;
+
+    /**
+     * @var string|null
+     */
+    protected $typeText;
+
+    // Shop integration
     /**
      * @var string|null
      */
@@ -70,6 +143,22 @@ class CardEntity extends Entity
      * @var int|null
      */
     protected $stockQuantity;
+
+    // API integration
+    /**
+     * @var string|null
+     */
+    protected $apiSource;
+
+    /**
+     * @var string|null
+     */
+    protected $externalId;
+
+    /**
+     * @var \DateTimeInterface|null
+     */
+    protected $lastApiUpdate;
 
     /**
      * @var array|null
@@ -265,5 +354,178 @@ class CardEntity extends Entity
     public function setDeckCards(DeckCardCollection $deckCards): void
     {
         $this->deckCards = $deckCards;
+    }
+
+    // Sorcery-specific getters and setters
+    public function getCost(): ?int
+    {
+        return $this->cost;
+    }
+
+    public function setCost(?int $cost): void
+    {
+        $this->cost = $cost;
+    }
+
+    public function getAttack(): ?int
+    {
+        return $this->attack;
+    }
+
+    public function setAttack(?int $attack): void
+    {
+        $this->attack = $attack;
+    }
+
+    public function getDefence(): ?int
+    {
+        return $this->defence;
+    }
+
+    public function setDefence(?int $defence): void
+    {
+        $this->defence = $defence;
+    }
+
+    public function getLife(): ?int
+    {
+        return $this->life;
+    }
+
+    public function setLife(?int $life): void
+    {
+        $this->life = $life;
+    }
+
+    public function getThresholds(): ?array
+    {
+        return $this->thresholds;
+    }
+
+    public function setThresholds(?array $thresholds): void
+    {
+        $this->thresholds = $thresholds;
+    }
+
+    public function getElements(): ?string
+    {
+        return $this->elements;
+    }
+
+    public function setElements(?string $elements): void
+    {
+        $this->elements = $elements;
+    }
+
+    public function getSubTypes(): ?string
+    {
+        return $this->subTypes;
+    }
+
+    public function setSubTypes(?string $subTypes): void
+    {
+        $this->subTypes = $subTypes;
+    }
+
+    // Set and variant getters and setters
+    public function getReleaseDate(): ?\DateTimeInterface
+    {
+        return $this->releaseDate;
+    }
+
+    public function setReleaseDate(?\DateTimeInterface $releaseDate): void
+    {
+        $this->releaseDate = $releaseDate;
+    }
+
+    public function getVariantSlug(): ?string
+    {
+        return $this->variantSlug;
+    }
+
+    public function setVariantSlug(?string $variantSlug): void
+    {
+        $this->variantSlug = $variantSlug;
+    }
+
+    public function getFinish(): ?string
+    {
+        return $this->finish;
+    }
+
+    public function setFinish(?string $finish): void
+    {
+        $this->finish = $finish;
+    }
+
+    public function getProduct(): ?string
+    {
+        return $this->product;
+    }
+
+    public function setProduct(?string $product): void
+    {
+        $this->product = $product;
+    }
+
+    public function getArtist(): ?string
+    {
+        return $this->artist;
+    }
+
+    public function setArtist(?string $artist): void
+    {
+        $this->artist = $artist;
+    }
+
+    public function getFlavorText(): ?string
+    {
+        return $this->flavorText;
+    }
+
+    public function setFlavorText(?string $flavorText): void
+    {
+        $this->flavorText = $flavorText;
+    }
+
+    public function getTypeText(): ?string
+    {
+        return $this->typeText;
+    }
+
+    public function setTypeText(?string $typeText): void
+    {
+        $this->typeText = $typeText;
+    }
+
+    // API integration getters and setters
+    public function getApiSource(): ?string
+    {
+        return $this->apiSource;
+    }
+
+    public function setApiSource(?string $apiSource): void
+    {
+        $this->apiSource = $apiSource;
+    }
+
+    public function getExternalId(): ?string
+    {
+        return $this->externalId;
+    }
+
+    public function setExternalId(?string $externalId): void
+    {
+        $this->externalId = $externalId;
+    }
+
+    public function getLastApiUpdate(): ?\DateTimeInterface
+    {
+        return $this->lastApiUpdate;
+    }
+
+    public function setLastApiUpdate(?\DateTimeInterface $lastApiUpdate): void
+    {
+        $this->lastApiUpdate = $lastApiUpdate;
     }
 }
