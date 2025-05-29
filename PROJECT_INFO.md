@@ -1,11 +1,11 @@
 # SorcerySW6 - Projekt-Informationen
 
 ## 📋 Projekt-Übersicht
-**Projekt:** SorcerySW6 - Shopware 6 Development Environment mit TCG Manager Plugin  
-**Zweck:** Trading Card Game Manager Plugin für Shopware 6  
-**Repository:** https://github.com/yourHostJost/SorcerySW6  
-**Erstellt:** 2024  
-**Status:** Aktive Entwicklung  
+**Projekt:** SorcerySW6 - Shopware 6 Development Environment mit TCG Manager Plugin
+**Zweck:** Trading Card Game Manager Plugin für Shopware 6
+**Repository:** https://github.com/yourHostJost/SorcerySW6
+**Erstellt:** 2024
+**Status:** ✅ Plugin vollständig funktionsfähig (Stand: 2024-12-28)
 
 ## 🛠️ Technische Spezifikationen
 
@@ -86,12 +86,14 @@ SorcerySW6/
 
 ## 📦 Plugin-Architektur
 
-### TCG Manager Plugin
+### TCG Manager Plugin ✅ FUNKTIONSFÄHIG
 - **Namespace:** TcgManager
 - **Typ:** shopware-platform-plugin
 - **Entities:** 5 Haupttabellen (Card, Collection, CollectionCard, Deck, DeckCard)
 - **Services:** CollectionService, DeckService, CardService, ShopIntegrationService
 - **Frontend:** Account-Integration mit Sidebar-Navigation
+- **Status:** Collection-CRUD vollständig funktionsfähig, API-Authentifizierung repariert
+- **Bekannte Probleme:** Deployment-Script repariert (2024-12-28)
 
 ## 🔧 Wichtige Befehle
 
@@ -100,7 +102,7 @@ SorcerySW6/
 # Development starten
 docker-compose up -d
 
-# Production starten  
+# Production starten
 docker-compose -f docker-compose.production.yml up -d
 
 # Container stoppen
