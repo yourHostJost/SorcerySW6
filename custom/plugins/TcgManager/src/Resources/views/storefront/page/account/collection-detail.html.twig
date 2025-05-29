@@ -1,0 +1,241 @@
+{% sw_extends '@Storefront/storefront/page/account/index.html.twig' %}
+
+{% block page_account_main_content %}
+    <div class="account-content">
+        <div class="account-content-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1>{{ "tcg.collections.detail.title"|trans }}</h1>
+                    <p class="account-content-description">
+                        {{ "tcg.collections.detail.description"|trans }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ path('frontend.account.tcg.collections') }}" class="btn btn-outline-secondary">
+                        {{ "tcg.common.back"|trans }}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="account-content-main">
+            <div class="collection-detail-loading" id="collectionLoading">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">{{ "tcg.common.loading"|trans }}</span>
+                    </div>
+                    <p class="mt-2">{{ "tcg.collections.loading"|trans }}</p>
+                </div>
+            </div>
+
+            <div class="collection-detail-content" id="collectionContent" style="display: none;">
+                <!-- Collection Info -->
+                <div class="collection-info-card mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h2 class="collection-name" id="collectionName"></h2>
+                                    <p class="collection-description text-muted" id="collectionDescription"></p>
+                                    <div class="collection-meta">
+                                        <span class="badge badge-info" id="collectionVisibility"></span>
+                                        <span class="badge badge-success" id="collectionDefault" style="display: none;">
+                                            {{ "tcg.collections.default"|trans }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <div class="collection-stats">
+                                        <div class="stat-item">
+                                            <span class="stat-value" id="totalCards">0</span>
+                                            <span class="stat-label">{{ "tcg.collections.total_cards"|trans }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="collection-actions mt-3">
+                                        <button class="btn btn-primary btn-sm" onclick="editCollection()">
+                                            {{ "tcg.common.edit"|trans }}
+                                        </button>
+                                        <button class="btn btn-success btn-sm" onclick="addCard()">
+                                            {{ "tcg.cards.add_to_collection"|trans }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="collection-cards">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>{{ "tcg.collections.cards_in_collection"|trans }}</h3>
+                        <div class="collection-filters">
+                            <input type="text" class="form-control form-control-sm"
+                                   placeholder="{{ "tcg.cards.search_placeholder"|trans }}"
+                                   id="cardSearch" onkeyup="filterCards()">
+                        </div>
+                    </div>
+
+                    <div class="cards-grid" id="cardsGrid">
+                        <!-- Cards will be loaded here -->
+                    </div>
+
+                    <div class="cards-empty" id="cardsEmpty" style="display: none;">
+                        <div class="alert alert-info text-center">
+                            <h4>{{ "tcg.collections.no_cards.title"|trans }}</h4>
+                            <p>{{ "tcg.collections.no_cards.description"|trans }}</p>
+                            <button class="btn btn-primary" onclick="addCard()">
+                                {{ "tcg.cards.add_first_card"|trans }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collection-detail-error" id="collectionError" style="display: none;">
+                <div class="alert alert-danger">
+                    <h4>{{ "tcg.common.error"|trans }}</h4>
+                    <p id="errorMessage"></p>
+                    <a href="{{ path('frontend.account.tcg.collections') }}" class="btn btn-secondary">
+                        {{ "tcg.common.back_to_collections"|trans }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block page_account_sidebar_content %}
+    {% sw_include '@TcgManager/storefront/page/account/sidebar.html.twig' %}
+{% endblock %}
+
+{% block base_body_script %}
+    {{ parent() }}
+
+    <script>
+        const collectionId = '{{ collectionId }}';
+        let collectionData = null;
+        let cardsData = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCollectionDetails();
+        });
+
+        function loadCollectionDetails() {
+            console.log('Loading collection details for ID:', collectionId);
+
+            fetch(`/account/tcg/collections/${collectionId}/api`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    collectionData = data.data;
+                    displayCollectionInfo();
+                    loadCollectionCards();
+                } else {
+                    console.error('API error:', data.message);
+                    showError(data.message || '{{ "tcg.collections.load_error"|trans }}');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showError('{{ "tcg.general.unknown_error"|trans }}: ' + error.message);
+            });
+        }
+
+        function displayCollectionInfo() {
+            document.getElementById('collectionName').textContent = collectionData.name;
+            document.getElementById('collectionDescription').textContent = collectionData.description || '';
+            document.getElementById('collectionVisibility').textContent =
+                collectionData.isPublic ? '{{ "tcg.collections.public"|trans }}' : '{{ "tcg.collections.private"|trans }}';
+
+            if (collectionData.isDefault) {
+                document.getElementById('collectionDefault').style.display = 'inline-block';
+            }
+        }
+
+        function loadCollectionCards() {
+            // For now, show empty state
+            document.getElementById('totalCards').textContent = '0';
+            document.getElementById('collectionLoading').style.display = 'none';
+            document.getElementById('collectionContent').style.display = 'block';
+            document.getElementById('cardsEmpty').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('collectionLoading').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('collectionError').style.display = 'block';
+        }
+
+        function editCollection() {
+            alert('{{ "tcg.collections.edit_coming_soon"|trans }}');
+        }
+
+        function addCard() {
+            alert('{{ "tcg.cards.add_coming_soon"|trans }}');
+        }
+
+        function filterCards() {
+            // TODO: Implement card filtering
+        }
+    </script>
+
+    <style>
+        .collection-info-card .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .collection-stats .stat-item {
+            text-align: center;
+        }
+
+        .collection-stats .stat-value {
+            display: block;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .collection-stats .stat-label {
+            display: block;
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .collection-filters {
+            width: 250px;
+        }
+
+        @media (max-width: 768px) {
+            .collection-filters {
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .d-flex.justify-content-between {
+                flex-direction: column;
+            }
+        }
+    </style>
+{% endblock %}

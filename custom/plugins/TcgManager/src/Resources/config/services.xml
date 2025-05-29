@@ -44,19 +44,26 @@
             <argument type="service" id="product.repository"/>
         </service>
 
+        <!-- Create alias for abstract service -->
+        <service id="Shopware\Core\System\SalesChannel\Context\AbstractSalesChannelContextFactory"
+                 alias="Shopware\Core\System\SalesChannel\Context\SalesChannelContextFactory" />
+
         <service id="TcgManager\Service\ShopIntegrationService">
             <argument type="service" id="product.repository"/>
-            <argument type="service" id="sales_channel_context.factory"/>
+            <argument type="service" id="Shopware\Core\System\SalesChannel\Context\AbstractSalesChannelContextFactory"/>
             <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService"/>
             <argument type="service" id="TcgManager\Service\CardService"/>
         </service>
 
-        <!-- API Controllers -->
+        <!-- Storefront Controllers -->
         <service id="TcgManager\Storefront\Controller\CollectionController" public="true">
             <argument type="service" id="TcgManager\Service\CollectionService"/>
             <argument type="service" id="TcgManager\Service\CardService"/>
             <call method="setContainer">
                 <argument type="service" id="service_container"/>
+            </call>
+            <call method="setTwig">
+                <argument type="service" id="twig"/>
             </call>
         </service>
 
@@ -66,6 +73,9 @@
             <argument type="service" id="TcgManager\Service\ShopIntegrationService"/>
             <call method="setContainer">
                 <argument type="service" id="service_container"/>
+            </call>
+            <call method="setTwig">
+                <argument type="service" id="twig"/>
             </call>
         </service>
 

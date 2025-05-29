@@ -11,7 +11,9 @@
             "error": "Fehler",
             "success": "Erfolgreich",
             "confirm": "Bestätigen",
-            "close": "Schließen"
+            "close": "Schließen",
+            "back": "Zurück",
+            "back_to_collections": "Zurück zu Sammlungen"
         },
         "collections": {
             "title": "Meine Kartensammlungen",
@@ -35,7 +37,20 @@
             "cards": "Karten",
             "default": "Standard",
             "public": "Öffentlich",
-            "private": "Privat"
+            "private": "Privat",
+            "detail": {
+                "title": "Sammlungsdetails",
+                "description": "Verwalten Sie die Karten in Ihrer Sammlung."
+            },
+            "loading": "Sammlung wird geladen...",
+            "load_error": "Fehler beim Laden der Sammlung",
+            "total_cards": "Karten gesamt",
+            "cards_in_collection": "Karten in der Sammlung",
+            "no_cards": {
+                "title": "Keine Karten in der Sammlung",
+                "description": "Diese Sammlung enthält noch keine Karten. Fügen Sie Ihre erste Karte hinzu."
+            },
+            "edit_coming_soon": "Bearbeiten-Funktion kommt bald"
         },
         "decks": {
             "title": "Meine Decks",
@@ -55,6 +70,8 @@
             "create": "Deck erstellen",
             "view": "Anzeigen",
             "edit": "Bearbeiten",
+            "copy": "Kopieren",
+            "created": "Erstellt",
             "compare_with_collection": "Mit Sammlung vergleichen",
             "missing_cards": "Fehlende Karten",
             "owned_cards": "Vorhandene Karten",
@@ -66,7 +83,28 @@
             "incomplete": "Unvollständig",
             "public": "Öffentlich",
             "private": "Privat",
-            "featured": "Empfohlen"
+            "featured": "Empfohlen",
+            "copy_success": "Deck erfolgreich kopiert",
+            "copy_error": "Fehler beim Kopieren des Decks"
+        },
+        "deck_feed": {
+            "title": "Deck-Feed",
+            "description": "Entdecken Sie neue Deck-Ideen von der Community und lassen Sie sich inspirieren.",
+            "no_decks": {
+                "title": "Keine öffentlichen Decks verfügbar",
+                "description": "Es sind derzeit keine öffentlichen Decks verfügbar. Schauen Sie später wieder vorbei oder erstellen Sie Ihr eigenes Deck."
+            },
+            "load_more": "Mehr Decks laden",
+            "load_more_coming_soon": "Weitere Decks laden - Funktion kommt bald"
+        },
+        "deck": {
+            "cards": "Karten",
+            "view": "Anzeigen",
+            "copy": "Kopieren",
+            "created": "Erstellt",
+            "copy_success": "Deck erfolgreich kopiert",
+            "copy_error": "Fehler beim Kopieren des Decks",
+            "create_first": "Erstes Deck erstellen"
         },
         "cards": {
             "title": "Karten",
@@ -85,6 +123,8 @@
             "add_to_collection": "Zur Sammlung hinzufügen",
             "add_to_deck": "Zum Deck hinzufügen",
             "add_to_cart": "In Warenkorb",
+            "add_first_card": "Erste Karte hinzufügen",
+            "add_coming_soon": "Karte hinzufügen - Funktion kommt bald",
             "quantity": "Anzahl",
             "condition": "Zustand",
             "language": "Sprache",
@@ -150,11 +190,15 @@
         },
         "account": {
             "menu": {
+                "title": "Trading Cards",
                 "collections": "Kartensammlungen",
                 "decks": "Meine Decks",
                 "deck_feed": "Deck-Feed",
                 "wishlist": "Wunschliste"
             }
+        },
+        "general": {
+            "unknown_error": "Unbekannter Fehler"
         },
         "notifications": {
             "collection_created": "Sammlung erfolgreich erstellt",

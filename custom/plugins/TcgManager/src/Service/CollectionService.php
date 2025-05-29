@@ -67,14 +67,29 @@ class CollectionService
     public function getCustomerCollections(string $customerId, Context $context = null): CollectionCollection
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter('customerId', $customerId));
         $criteria->addAssociation('collectionCards.card');
 
         $result = $this->collectionRepository->search($criteria, $context);
-        
+
         return $result->getEntities();
+    }
+
+    /**
+     * Get a collection by ID
+     */
+    public function getCollectionById(string $collectionId, Context $context = null): ?CollectionEntity
+    {
+        $context = $context ?? Context::createDefaultContext();
+
+        $criteria = new Criteria([$collectionId]);
+        $criteria->addAssociation('collectionCards.card');
+
+        $result = $this->collectionRepository->search($criteria, $context);
+
+        return $result->first();
     }
 
     /**
@@ -83,7 +98,7 @@ class CollectionService
     public function getDefaultCollection(string $customerId, Context $context = null): ?CollectionEntity
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addFilter(new MultiFilter(MultiFilter::CONNECTION_AND, [
             new EqualsFilter('customerId', $customerId),
@@ -91,7 +106,7 @@ class CollectionService
         ]));
 
         $result = $this->collectionRepository->search($criteria, $context);
-        
+
         return $result->first();
     }
 
@@ -111,7 +126,7 @@ class CollectionService
 
         // Check if card already exists in collection with same properties
         $existingCard = $this->getCollectionCard($collectionId, $cardId, $condition, $language, $foilType, $context);
-        
+
         if ($existingCard) {
             // Update quantity
             $this->collectionCardRepository->update([
@@ -121,12 +136,12 @@ class CollectionService
                     'updatedAt' => new \DateTime(),
                 ]
             ], $context);
-            
+
             return $existingCard['id'];
         } else {
             // Create new collection card entry
             $collectionCardId = Uuid::randomHex();
-            
+
             $collectionCardData = [
                 'id' => $collectionCardId,
                 'collectionId' => $collectionId,
@@ -139,7 +154,7 @@ class CollectionService
             ];
 
             $this->collectionCardRepository->create([$collectionCardData], $context);
-            
+
             return $collectionCardId;
         }
     }
@@ -159,13 +174,13 @@ class CollectionService
         $context = $context ?? Context::createDefaultContext();
 
         $existingCard = $this->getCollectionCard($collectionId, $cardId, $condition, $language, $foilType, $context);
-        
+
         if (!$existingCard) {
             return false;
         }
 
         $newQuantity = $existingCard['quantity'] - $quantity;
-        
+
         if ($newQuantity <= 0) {
             // Remove the card completely
             $this->collectionCardRepository->delete([['id' => $existingCard['id']]], $context);
@@ -204,7 +219,7 @@ class CollectionService
         ]));
 
         $result = $this->collectionCardRepository->search($criteria, $context);
-        
+
         return $result->first();
     }
 
@@ -220,7 +235,7 @@ class CollectionService
         ]));
 
         $collections = $this->collectionRepository->search($criteria, $context);
-        
+
         $updates = [];
         foreach ($collections as $collection) {
             $updates[] = [

@@ -1,0 +1,35 @@
+{% sw_extends '@Storefront/storefront/page/account/sidebar.html.twig' %}
+
+{% block page_account_sidebar_menu %}
+    {{ parent() }}
+    
+    {# Add TCG Manager menu items to account sidebar #}
+    <div class="account-sidebar-item">
+        <div class="account-sidebar-header">
+            <h3>{{ "tcg.account.menu.title"|trans }}</h3>
+        </div>
+        <ul class="account-sidebar-list">
+            <li class="account-sidebar-list-item">
+                <a href="{{ path('frontend.account.tcg.collections') }}" 
+                   class="account-sidebar-link{% if controllerAction == 'collectionsPage' %} is-active{% endif %}">
+                    <i class="fas fa-layer-group"></i>
+                    {{ "tcg.account.menu.collections"|trans }}
+                </a>
+            </li>
+            <li class="account-sidebar-list-item">
+                <a href="{{ path('frontend.account.tcg.decks') }}" 
+                   class="account-sidebar-link{% if controllerAction == 'decksPage' %} is-active{% endif %}">
+                    <i class="fas fa-cards-blank"></i>
+                    {{ "tcg.account.menu.decks"|trans }}
+                </a>
+            </li>
+            <li class="account-sidebar-list-item">
+                <a href="{{ path('frontend.account.tcg.deck.feed') }}" 
+                   class="account-sidebar-link{% if controllerAction == 'deckFeed' %} is-active{% endif %}">
+                    <i class="fas fa-rss"></i>
+                    {{ "tcg.account.menu.deck_feed"|trans }}
+                </a>
+            </li>
+        </ul>
+    </div>
+{% endblock %}

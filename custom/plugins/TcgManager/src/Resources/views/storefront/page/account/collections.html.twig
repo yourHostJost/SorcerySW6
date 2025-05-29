@@ -50,11 +50,11 @@
                                             </div>
                                         </div>
                                         <div class="collection-actions">
-                                            <a href="{{ path('frontend.account.tcg.collection.detail', {'collectionId': collection.id}) }}" 
+                                            <a href="{{ path('frontend.account.tcg.collection.detail', {'collectionId': collection.id}) }}"
                                                class="btn btn-outline-primary btn-sm">
                                                 {{ "tcg.collections.view"|trans }}
                                             </a>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            <button type="button" class="btn btn-outline-secondary btn-sm"
                                                     onclick="editCollection('{{ collection.id }}')">
                                                 {{ "tcg.collections.edit"|trans }}
                                             </button>
@@ -164,41 +164,85 @@
     </div>
 {% endblock %}
 
-{% block page_account_main_content_inner_javascript %}
+{% block base_body_script %}
+    {{ parent() }}
+
     <script>
+        // Get CSRF token from multiple possible sources
+        function getCSRFToken() {
+            // Try different meta tag names
+            let token = document.querySelector('meta[name="_csrf_token"]')?.getAttribute('content');
+            if (!token) token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!token) token = document.querySelector('meta[name="_token"]')?.getAttribute('content');
+
+            // Try to get from form if available
+            if (!token) {
+                const tokenInput = document.querySelector('input[name="_token"]');
+                if (tokenInput) token = tokenInput.value;
+            }
+
+            return token || '';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Collections page loaded'); // Debug
+            const csrfToken = getCSRFToken();
+            console.log('CSRF Token:', csrfToken); // Debug
+
             // Create collection form handler
             const createForm = document.getElementById('createCollectionForm');
+            console.log('Create form found:', createForm); // Debug
+
             if (createForm) {
                 createForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
+                    console.log('Form submitted'); // Debug
+
                     const formData = new FormData(createForm);
-                    const data = {
-                        name: formData.get('name'),
-                        description: formData.get('description'),
-                        isPublic: formData.get('isPublic') === 'on',
-                        isDefault: formData.get('isDefault') === 'on'
-                    };
-                    
-                    fetch('/api/tcg/collections', {
+
+                    console.log('Sending collection form data'); // Debug
+
+                    fetch('/account/tcg/collections/create', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify(data)
+                        body: formData
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log('Response received:', response); // Debug
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.text().then(text => {
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                console.error('Response text:', text);
+                                throw new Error('Invalid JSON response');
+                            }
+                        });
+                    })
                     .then(result => {
+                        console.log('Result:', result); // Debug
                         if (result.success) {
+                            alert('Sammlung erfolgreich erstellt!');
                             location.reload();
                         } else {
-                            alert(result.message || 'Fehler beim Erstellen der Sammlung');
+                            // Handle Shopware error format
+                            let errorMessage = 'Fehler beim Erstellen der Sammlung';
+                            if (result.errors && result.errors.length > 0) {
+                                errorMessage = result.errors.map(error => error.detail || error.title || error).join(', ');
+                            } else if (result.message) {
+                                errorMessage = result.message;
+                            }
+                            console.error('Collection creation error:', result);
+                            alert(errorMessage);
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Ein Fehler ist aufgetreten');
+                        alert('Ein Fehler ist aufgetreten: ' + error.message);
                     });
                 });
             }
@@ -210,8 +254,8 @@
         }
 
         function showCardSearch() {
-            // TODO: Implement card search modal
-            console.log('Show card search');
+            // For now, show a simple alert with information
+            alert('Karten-Suche wird in einer zukünftigen Version verfügbar sein.\n\nGeplante Features:\n- Karten nach Name suchen\n- Filter nach Edition, Seltenheit, Typ\n- Karten zur Sammlung hinzufügen\n- Preisvergleich');
         }
     </script>
 

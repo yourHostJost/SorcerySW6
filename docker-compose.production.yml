@@ -15,6 +15,7 @@ services:
     volumes:
       - shopware_data:/var/www/html
       - shopware_mysql:/var/lib/mysql
+      - ./custom:/var/www/html/custom
     networks:
       - shopware_network
     healthcheck:

@@ -75,13 +75,13 @@ class DeckService
     public function getCustomerDecks(string $customerId, Context $context = null): DeckCollection
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter('customerId', $customerId));
         $criteria->addAssociation('deckCards.card');
 
         $result = $this->deckRepository->search($criteria, $context);
-        
+
         return $result->getEntities();
     }
 
@@ -91,7 +91,7 @@ class DeckService
     public function getPublicDecks(int $limit = 20, Context $context = null): DeckCollection
     {
         $context = $context ?? Context::createDefaultContext();
-        
+
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter('isPublic', true));
         $criteria->addAssociation('deckCards.card');
@@ -99,7 +99,7 @@ class DeckService
         $criteria->setLimit($limit);
 
         $result = $this->deckRepository->search($criteria, $context);
-        
+
         return $result->getEntities();
     }
 
@@ -118,7 +118,7 @@ class DeckService
 
         // Check if card already exists in deck
         $existingCard = $this->getDeckCard($deckId, $cardId, $isSideboard, $context);
-        
+
         if ($existingCard) {
             // Update quantity
             $this->deckCardRepository->update([
@@ -128,12 +128,12 @@ class DeckService
                     'updatedAt' => new \DateTime(),
                 ]
             ], $context);
-            
+
             $deckCardId = $existingCard['id'];
         } else {
             // Create new deck card entry
             $deckCardId = Uuid::randomHex();
-            
+
             $deckCardData = [
                 'id' => $deckCardId,
                 'deckId' => $deckId,
@@ -149,7 +149,7 @@ class DeckService
 
         // Update deck statistics
         $this->updateDeckStatistics($deckId, $context);
-        
+
         return $deckCardId;
     }
 
@@ -166,13 +166,13 @@ class DeckService
         $context = $context ?? Context::createDefaultContext();
 
         $existingCard = $this->getDeckCard($deckId, $cardId, $isSideboard, $context);
-        
+
         if (!$existingCard) {
             return false;
         }
 
         $newQuantity = $existingCard['quantity'] - $quantity;
-        
+
         if ($newQuantity <= 0) {
             // Remove the card completely
             $this->deckCardRepository->delete([['id' => $existingCard['id']]], $context);
@@ -208,7 +208,7 @@ class DeckService
 
         // Get customer's default collection
         $collection = $this->collectionService->getDefaultCollection($customerId, $context);
-        
+
         if (!$collection) {
             // Customer has no collection, all cards are missing
             $missingCards = [];
@@ -232,7 +232,7 @@ class DeckService
         $collectionCriteria = new Criteria();
         $collectionCriteria->addFilter(new EqualsFilter('collectionId', $collection->getId()));
         $collectionCriteria->addAssociation('card');
-        $collectionCards = $this->collectionService->getCollectionCardRepository()->search($collectionCriteria, $context);
+        $collectionCards = $this->collectionCardRepository->search($collectionCriteria, $context);
 
         // Build collection lookup
         $collectionLookup = [];
@@ -289,7 +289,7 @@ class DeckService
         ]));
 
         $result = $this->deckCardRepository->search($criteria, $context);
-        
+
         return $result->first();
     }
 
@@ -309,7 +309,7 @@ class DeckService
         foreach ($deckCards as $deckCard) {
             $quantity = $deckCard->getQuantity();
             $totalCards += $quantity;
-            
+
             if ($deckCard->getIsSideboard()) {
                 $sideboardSize += $quantity;
             } else {

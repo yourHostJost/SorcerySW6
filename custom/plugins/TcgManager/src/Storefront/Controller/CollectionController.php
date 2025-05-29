@@ -3,19 +3,17 @@
 namespace TcgManager\Storefront\Controller;
 
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Storefront\Controller\StorefrontController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
+use Shopware\Core\Checkout\Cart\CartException;
 use TcgManager\Service\CollectionService;
 use TcgManager\Service\CardService;
 
-/**
- * @RouteScope(scopes={"storefront"})
- */
+#[Route(defaults: ['_routeScope' => ['storefront']])]
 class CollectionController extends StorefrontController
 {
     private CollectionService $collectionService;
@@ -29,33 +27,55 @@ class CollectionController extends StorefrontController
         $this->cardService = $cardService;
     }
 
-    /**
-     * @Route("/account/tcg/collections", name="frontend.account.tcg.collections", methods={"GET"})
-     */
+    private function denyAccessUnlessLoggedIn(SalesChannelContext $context): void
+    {
+        if (!$context->getCustomer()) {
+            throw CartException::customerNotLoggedIn();
+        }
+    }
+
+    #[Route(path: '/account/tcg/collections', name: 'frontend.account.tcg.collections', methods: ['GET'])]
     public function collectionsPage(Request $request, SalesChannelContext $context): Response
     {
-        $this->denyAccessUnlessLoggedIn();
-        
+        $this->denyAccessUnlessLoggedIn($context);
+
         $customerId = $context->getCustomer()->getId();
         $collections = $this->collectionService->getCustomerCollections($customerId, $context->getContext());
-        
+
+        // Debug: Log collection count
+        error_log("DEBUG: Customer ID: " . $customerId);
+        error_log("DEBUG: Collections count: " . $collections->count());
+
+        // Convert collections to array for Twig
+        $collectionsArray = [];
+        foreach ($collections as $collection) {
+            error_log("DEBUG: Collection: " . $collection->getName() . " (ID: " . $collection->getId() . ")");
+            $collectionsArray[] = [
+                'id' => $collection->getId(),
+                'name' => $collection->getName(),
+                'description' => $collection->getDescription(),
+                'isPublic' => $collection->getIsPublic(),
+                'isDefault' => $collection->getIsDefault(),
+                'createdAt' => $collection->getCreatedAt(),
+                'collectionCards' => $collection->getCollectionCards(),
+            ];
+        }
+
         return $this->renderStorefront('@TcgManager/storefront/page/account/collections.html.twig', [
-            'collections' => $collections,
+            'collections' => $collectionsArray,
             'page' => [
                 'title' => 'Meine Kartensammlungen'
             ]
         ]);
     }
 
-    /**
-     * @Route("/account/tcg/collection/{collectionId}", name="frontend.account.tcg.collection.detail", methods={"GET"})
-     */
+    #[Route(path: '/account/tcg/collections/{collectionId}', name: 'frontend.account.tcg.collection.detail', methods: ['GET'])]
     public function collectionDetail(string $collectionId, Request $request, SalesChannelContext $context): Response
     {
-        $this->denyAccessUnlessLoggedIn();
-        
+        $this->denyAccessUnlessLoggedIn($context);
+
         // TODO: Add security check to ensure customer owns this collection
-        
+
         return $this->renderStorefront('@TcgManager/storefront/page/account/collection-detail.html.twig', [
             'collectionId' => $collectionId,
             'page' => [
@@ -64,16 +84,14 @@ class CollectionController extends StorefrontController
         ]);
     }
 
-    /**
-     * @Route("/api/tcg/collections", name="api.tcg.collections.list", methods={"GET"})
-     */
+    #[Route(path: '/api/tcg/collections', name: 'api.tcg.collections.list', methods: ['GET'], defaults: ['_routeScope' => ['storefront']])]
     public function getCollections(Request $request, SalesChannelContext $context): JsonResponse
     {
-        $this->denyAccessUnlessLoggedIn();
-        
+        $this->denyAccessUnlessLoggedIn($context);
+
         $customerId = $context->getCustomer()->getId();
         $collections = $this->collectionService->getCustomerCollections($customerId, $context->getContext());
-        
+
         $collectionsData = [];
         foreach ($collections as $collection) {
             $collectionsData[] = [
@@ -86,36 +104,131 @@ class CollectionController extends StorefrontController
                 'cardCount' => $collection->getCollectionCards() ? $collection->getCollectionCards()->count() : 0,
             ];
         }
-        
+
         return new JsonResponse([
             'success' => true,
             'data' => $collectionsData
         ]);
     }
 
-    /**
-     * @Route("/api/tcg/collections", name="api.tcg.collections.create", methods={"POST"})
-     */
+    #[Route(path: '/tcg/test', name: 'tcg.test', methods: ['GET'])]
+    public function testRoute(Request $request): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Test route is working',
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    #[Route(path: '/account/tcg/collections/{collectionId}/api', name: 'frontend.account.tcg.collections.api', methods: ['GET'], defaults: ['_routeScope' => ['storefront']])]
+    public function getCollectionDetail(string $collectionId, Request $request, SalesChannelContext $context): JsonResponse
+    {
+        // Simple test first - return dummy data
+        return new JsonResponse([
+            'success' => true,
+            'data' => [
+                'id' => $collectionId,
+                'name' => 'Test Collection',
+                'description' => 'This is a test collection',
+                'isPublic' => false,
+                'isDefault' => false,
+                'createdAt' => date('Y-m-d H:i:s'),
+                'cardCount' => 0
+            ]
+        ]);
+
+        /*
+        try {
+            // Check if user is logged in
+            if (!$context->getCustomer()) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Nicht angemeldet'
+                ], 401);
+            }
+
+            $collection = $this->collectionService->getCollectionById($collectionId, $context->getContext());
+
+            if (!$collection) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Sammlung nicht gefunden'
+                ], 404);
+            }
+
+            // Security check: ensure customer owns this collection
+            $customerId = $context->getCustomer()->getId();
+            if ($collection->getCustomerId() !== $customerId) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Zugriff verweigert'
+                ], 403);
+            }
+
+            $collectionData = [
+                'id' => $collection->getId(),
+                'name' => $collection->getName(),
+                'description' => $collection->getDescription(),
+                'isPublic' => $collection->getIsPublic(),
+                'isDefault' => $collection->getIsDefault(),
+                'createdAt' => $collection->getCreatedAt()->format('Y-m-d H:i:s'),
+                'cardCount' => $collection->getCollectionCards() ? $collection->getCollectionCards()->count() : 0,
+            ];
+
+            error_log("DEBUG: Collection data loaded successfully: " . json_encode($collectionData));
+
+            return new JsonResponse([
+                'success' => true,
+                'data' => $collectionData
+            ]);
+        } catch (\Exception $e) {
+            error_log("DEBUG: Exception in getCollectionDetail: " . $e->getMessage());
+            error_log("DEBUG: Exception trace: " . $e->getTraceAsString());
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Fehler beim Laden der Sammlung: ' . $e->getMessage()
+            ], 500);
+        }
+        */
+    }
+
+    #[Route(path: '/account/tcg/collections/create', name: 'frontend.account.tcg.collections.create', methods: ['POST'], defaults: ['_routeScope' => ['storefront'], 'XmlHttpRequest' => true])]
     public function createCollection(Request $request, SalesChannelContext $context): JsonResponse
     {
-        $this->denyAccessUnlessLoggedIn();
-        
-        $data = json_decode($request->getContent(), true);
+        $this->denyAccessUnlessLoggedIn($context);
+
+        // Handle both JSON and form data
+        $contentType = $request->headers->get('Content-Type', '');
+        if (strpos($contentType, 'application/json') !== false) {
+            $data = json_decode($request->getContent(), true);
+        } else {
+            // Handle form data
+            $data = [
+                'name' => $request->request->get('name'),
+                'description' => $request->request->get('description'),
+                'isPublic' => $request->request->get('isPublic') === 'on',
+                'isDefault' => $request->request->get('isDefault') === 'on',
+            ];
+        }
         $customerId = $context->getCustomer()->getId();
-        
+
         $name = $data['name'] ?? '';
         $description = $data['description'] ?? null;
         $isPublic = $data['isPublic'] ?? false;
         $isDefault = $data['isDefault'] ?? false;
-        
+
         if (empty($name)) {
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Name ist erforderlich'
             ], 400);
         }
-        
+
         try {
+            error_log("DEBUG: Creating collection for customer: " . $customerId);
+            error_log("DEBUG: Collection name: " . $name);
+
             $collectionId = $this->collectionService->createCollection(
                 $customerId,
                 $name,
@@ -124,13 +237,16 @@ class CollectionController extends StorefrontController
                 $isDefault,
                 $context->getContext()
             );
-            
+
+            error_log("DEBUG: Collection created with ID: " . $collectionId);
+
             return new JsonResponse([
                 'success' => true,
                 'data' => ['id' => $collectionId],
                 'message' => 'Sammlung erfolgreich erstellt'
             ]);
         } catch (\Exception $e) {
+            error_log("DEBUG: Error creating collection: " . $e->getMessage());
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Fehler beim Erstellen der Sammlung: ' . $e->getMessage()
@@ -138,28 +254,26 @@ class CollectionController extends StorefrontController
         }
     }
 
-    /**
-     * @Route("/api/tcg/collections/{collectionId}/cards", name="api.tcg.collections.add_card", methods={"POST"})
-     */
+    #[Route(path: '/api/tcg/collections/{collectionId}/cards', name: 'api.tcg.collections.add_card', methods: ['POST'])]
     public function addCardToCollection(string $collectionId, Request $request, SalesChannelContext $context): JsonResponse
     {
-        $this->denyAccessUnlessLoggedIn();
-        
+        $this->denyAccessUnlessLoggedIn($context);
+
         $data = json_decode($request->getContent(), true);
-        
+
         $cardId = $data['cardId'] ?? '';
         $quantity = $data['quantity'] ?? 1;
         $condition = $data['condition'] ?? null;
         $language = $data['language'] ?? 'en';
         $foilType = $data['foilType'] ?? 'normal';
-        
+
         if (empty($cardId)) {
             return new JsonResponse([
                 'success' => false,
                 'message' => 'Karten-ID ist erforderlich'
             ], 400);
         }
-        
+
         try {
             $collectionCardId = $this->collectionService->addCardToCollection(
                 $collectionId,
@@ -170,7 +284,7 @@ class CollectionController extends StorefrontController
                 $foilType,
                 $context->getContext()
             );
-            
+
             return new JsonResponse([
                 'success' => true,
                 'data' => ['id' => $collectionCardId],
@@ -184,20 +298,18 @@ class CollectionController extends StorefrontController
         }
     }
 
-    /**
-     * @Route("/api/tcg/collections/{collectionId}/cards/{cardId}", name="api.tcg.collections.remove_card", methods={"DELETE"})
-     */
+    #[Route(path: '/api/tcg/collections/{collectionId}/cards/{cardId}', name: 'api.tcg.collections.remove_card', methods: ['DELETE'])]
     public function removeCardFromCollection(string $collectionId, string $cardId, Request $request, SalesChannelContext $context): JsonResponse
     {
-        $this->denyAccessUnlessLoggedIn();
-        
+        $this->denyAccessUnlessLoggedIn($context);
+
         $data = json_decode($request->getContent(), true);
-        
+
         $quantity = $data['quantity'] ?? 1;
         $condition = $data['condition'] ?? null;
         $language = $data['language'] ?? 'en';
         $foilType = $data['foilType'] ?? 'normal';
-        
+
         try {
             $success = $this->collectionService->removeCardFromCollection(
                 $collectionId,
@@ -208,7 +320,7 @@ class CollectionController extends StorefrontController
                 $foilType,
                 $context->getContext()
             );
-            
+
             if ($success) {
                 return new JsonResponse([
                     'success' => true,
@@ -228,9 +340,7 @@ class CollectionController extends StorefrontController
         }
     }
 
-    /**
-     * @Route("/api/tcg/cards/search", name="api.tcg.cards.search", methods={"GET"})
-     */
+    #[Route(path: '/api/tcg/cards/search', name: 'api.tcg.cards.search', methods: ['GET'])]
     public function searchCards(Request $request, SalesChannelContext $context): JsonResponse
     {
         $searchTerm = $request->query->get('q');
@@ -244,7 +354,7 @@ class CollectionController extends StorefrontController
         $inStockOnly = $request->query->getBoolean('inStock', false);
         $limit = $request->query->getInt('limit', 20);
         $offset = $request->query->getInt('offset', 0);
-        
+
         $cards = $this->cardService->searchCards(
             $searchTerm,
             $edition,
@@ -259,7 +369,7 @@ class CollectionController extends StorefrontController
             $offset,
             $context->getContext()
         );
-        
+
         $cardsData = [];
         foreach ($cards as $card) {
             $cardsData[] = [
@@ -278,7 +388,7 @@ class CollectionController extends StorefrontController
                 'cardNumber' => $card->getCardNumber(),
             ];
         }
-        
+
         return new JsonResponse([
             'success' => true,
             'data' => $cardsData,
