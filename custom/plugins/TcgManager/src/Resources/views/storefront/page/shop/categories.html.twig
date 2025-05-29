@@ -1,0 +1,266 @@
+{% extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_content %}
+<div class="tcg-shop-categories">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="text-center">
+                    <h1 class="h2">🃏 TCG Kategorien</h1>
+                    <p class="lead">Entdecken Sie unsere {{ totalCards }} verfügbaren Trading Cards</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ path('tcg.shop.catalog') }}" class="btn btn-primary btn-lg">
+                        🔍 Alle Karten durchsuchen
+                    </a>
+                    <a href="{{ path('tcg.shop.catalog', {'sort': 'price_asc'}) }}" class="btn btn-outline-success btn-lg">
+                        💰 Günstigste Karten
+                    </a>
+                    <a href="{{ path('tcg.shop.catalog', {'rarity': 'Unique'}) }}" class="btn btn-outline-warning btn-lg">
+                        ⭐ Seltene Karten
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Grid -->
+        <div class="row">
+            <!-- Editionen -->
+            {% if aggregations.get('editions') %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="card-title mb-0">📚 Editionen</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Durchsuchen Sie Karten nach Editionen</p>
+                        <div class="list-group list-group-flush">
+                            {% for bucket in aggregations.get('editions').buckets %}
+                            <a href="{{ path('tcg.shop.catalog', {'edition': bucket.key}) }}" 
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <span>{{ bucket.key }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ bucket.count }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Seltenheiten -->
+            {% if aggregations.get('rarities') %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="card-title mb-0">⭐ Seltenheiten</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Finden Sie Karten nach Seltenheitsgrad</p>
+                        <div class="list-group list-group-flush">
+                            {% for bucket in aggregations.get('rarities').buckets %}
+                            <a href="{{ path('tcg.shop.catalog', {'rarity': bucket.key}) }}" 
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <span>
+                                    {% if bucket.key == 'Unique' %}🌟
+                                    {% elseif bucket.key == 'Elite' %}💎
+                                    {% elseif bucket.key == 'Exceptional' %}🔥
+                                    {% elseif bucket.key == 'Ordinary' %}⚪
+                                    {% endif %}
+                                    {{ bucket.key }}
+                                </span>
+                                <span class="badge bg-warning text-dark rounded-pill">{{ bucket.count }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Kartentypen -->
+            {% if aggregations.get('cardTypes') %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="card-title mb-0">🎴 Kartentypen</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Entdecken Sie verschiedene Kartentypen</p>
+                        <div class="list-group list-group-flush">
+                            {% for bucket in aggregations.get('cardTypes').buckets %}
+                                {% if bucket.key %}
+                                <a href="{{ path('tcg.shop.catalog', {'type': bucket.key}) }}" 
+                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <span>{{ bucket.key }}</span>
+                                    <span class="badge bg-success rounded-pill">{{ bucket.count }}</span>
+                                </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Elemente -->
+            {% if aggregations.get('elements') %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="card-title mb-0">⚡ Elemente</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Suchen Sie nach Elementtypen</p>
+                        <div class="list-group list-group-flush">
+                            {% for bucket in aggregations.get('elements').buckets %}
+                                {% if bucket.key %}
+                                <a href="{{ path('tcg.shop.catalog', {'elements': bucket.key}) }}" 
+                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <span>
+                                        {% if bucket.key == 'Fire' %}🔥
+                                        {% elseif bucket.key == 'Water' %}💧
+                                        {% elseif bucket.key == 'Earth' %}🌍
+                                        {% elseif bucket.key == 'Air' %}💨
+                                        {% else %}⚡
+                                        {% endif %}
+                                        {{ bucket.key }}
+                                    </span>
+                                    <span class="badge bg-info rounded-pill">{{ bucket.count }}</span>
+                                </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Preiskategorien -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="card-title mb-0">💰 Preiskategorien</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Finden Sie Karten in Ihrem Budget</p>
+                        <div class="list-group list-group-flush">
+                            <a href="{{ path('tcg.shop.catalog', {'sort': 'price_asc'}) }}" 
+                               class="list-group-item list-group-item-action">
+                                <span>💸 Günstigste zuerst</span>
+                            </a>
+                            <a href="{{ path('tcg.shop.catalog', {'sort': 'price_desc'}) }}" 
+                               class="list-group-item list-group-item-action">
+                                <span>💎 Teuerste zuerst</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Erweiterte Suche -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-dark text-white">
+                        <h4 class="card-title mb-0">🔍 Erweiterte Suche</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Nutzen Sie unsere erweiterten Suchoptionen</p>
+                        <form method="GET" action="{{ path('tcg.shop.catalog') }}">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" name="q" 
+                                       placeholder="Kartenname eingeben...">
+                            </div>
+                            <div class="mb-3">
+                                <select class="form-select" name="edition">
+                                    <option value="">Alle Editionen</option>
+                                    {% if aggregations.get('editions') %}
+                                        {% for bucket in aggregations.get('editions').buckets %}
+                                        <option value="{{ bucket.key }}">{{ bucket.key }}</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <select class="form-select" name="rarity">
+                                    <option value="">Alle Seltenheiten</option>
+                                    {% if aggregations.get('rarities') %}
+                                        {% for bucket in aggregations.get('rarities').buckets %}
+                                        <option value="{{ bucket.key }}">{{ bucket.key }}</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-dark w-100">Suchen</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Collections -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="text-center mb-4">🌟 Empfohlene Sammlungen</h3>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-star fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">Starter Collection</h5>
+                        <p class="card-text">Perfekt für Einsteiger</p>
+                        <a href="{{ path('tcg.shop.catalog', {'rarity': 'Ordinary'}) }}" 
+                           class="btn btn-outline-primary">Entdecken</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-gem fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Premium Cards</h5>
+                        <p class="card-text">Seltene und wertvolle Karten</p>
+                        <a href="{{ path('tcg.shop.catalog', {'rarity': 'Elite'}) }}" 
+                           class="btn btn-outline-primary">Entdecken</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-fire fa-3x text-danger mb-3"></i>
+                        <h5 class="card-title">Alpha Edition</h5>
+                        <p class="card-text">Die ursprüngliche Edition</p>
+                        <a href="{{ path('tcg.shop.catalog', {'edition': 'Alpha'}) }}" 
+                           class="btn btn-outline-primary">Entdecken</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-crown fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">Unique Cards</h5>
+                        <p class="card-text">Einzigartige Sammlerstücke</p>
+                        <a href="{{ path('tcg.shop.catalog', {'rarity': 'Unique'}) }}" 
+                           class="btn btn-outline-primary">Entdecken</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

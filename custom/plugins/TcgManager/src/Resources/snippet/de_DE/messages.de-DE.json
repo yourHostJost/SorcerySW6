@@ -13,7 +13,8 @@
             "confirm": "Bestätigen",
             "close": "Schließen",
             "back": "Zurück",
-            "back_to_collections": "Zurück zu Sammlungen"
+            "back_to_collections": "Zurück zu Sammlungen",
+            "clear": "Löschen"
         },
         "collections": {
             "title": "Meine Kartensammlungen",
@@ -46,6 +47,8 @@
             "load_error": "Fehler beim Laden der Sammlung",
             "total_cards": "Karten gesamt",
             "cards_in_collection": "Karten in der Sammlung",
+            "unique_cards": "Einzigartige Karten",
+            "total_value": "Gesamtwert",
             "no_cards": {
                 "title": "Keine Karten in der Sammlung",
                 "description": "Diese Sammlung enthält noch keine Karten. Fügen Sie Ihre erste Karte hinzu."
@@ -125,6 +128,28 @@
             "add_to_cart": "In Warenkorb",
             "add_first_card": "Erste Karte hinzufügen",
             "add_coming_soon": "Karte hinzufügen - Funktion kommt bald",
+            "browser": {
+                "title": "Karten-Browser",
+                "description": "Ziehen Sie Karten in die Collection-Zone rechts"
+            },
+            "all_editions": "Alle Editionen",
+            "all_rarities": "Alle Seltenheiten",
+            "random": "Zufällige Karten",
+            "load_random": "Zufällige Karten laden",
+            "no_results": "Keine Karten gefunden",
+            "clear": "Filter löschen",
+            "browser": {
+                "title": "Karten-Browser",
+                "description": "Ziehen Sie Karten in die Collection-Zone rechts",
+                "empty": "Klicken Sie auf 'Zufällige Karten laden' um zu beginnen"
+            },
+            "drop_zone": {
+                "title": "Karten hier ablegen",
+                "description": "Ziehen Sie Karten aus dem Browser hierher, um sie zur Collection hinzuzufügen",
+                "hint": "Drag & Drop",
+                "active": "Karte hier ablegen!",
+                "instruction": "Ziehen Sie Karten aus dem linken Browser hierher"
+            },
             "quantity": "Anzahl",
             "condition": "Zustand",
             "language": "Sprache",

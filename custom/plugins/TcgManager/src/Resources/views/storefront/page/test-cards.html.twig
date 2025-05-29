@@ -45,7 +45,8 @@
                             </select>
                         </div>
                         <button type="button" class="btn btn-primary" onclick="searchCards()">Suchen</button>
-                        <button type="button" class="btn btn-secondary" onclick="loadRandomCards()">Zufällige Karten</button>
+                        <a href="/tcg/test-cards?refresh=1" class="btn btn-secondary">🎲 Neue zufällige Karten</a>
+                        <button type="button" class="btn btn-info" onclick="loadRandomCards()">AJAX-Test (optional)</button>
                     </div>
                 </div>
 
@@ -73,15 +74,16 @@
                             <p class="mt-2">Lade Kartendaten...</p>
                         </div>
 
-                        <div id="cardsContainer">
-                            {% if sampleCards %}
+                        <!-- Server-seitig geladene Karten (werden nicht überschrieben) -->
+                        {% if sampleCards %}
+                            <div id="serverCards" class="mb-4">
                                 <h6>📋 Beispiel-Karten (Server-seitig geladen):</h6>
                                 <div class="row">
                                     {% for card in sampleCards %}
                                         <div class="col-md-6 mb-3">
-                                            <div class="card h-100">
-                                                <div class="card-header">
-                                                    <h6 class="card-title mb-0">{{ card.title }}</h6>
+                                            <div class="card h-100 border-success">
+                                                <div class="card-header bg-light">
+                                                    <h6 class="card-title mb-0 text-success">{{ card.title }}</h6>
                                                     <small class="text-muted">{{ card.edition }} - {{ card.rarity|default('N/A') }}</small>
                                                 </div>
                                                 <div class="card-body">
@@ -109,9 +111,9 @@
                                                         <p class="mt-1 small"><strong>Künstler:</strong> {{ card.artist }}</p>
                                                     {% endif %}
                                                 </div>
-                                                <div class="card-footer">
-                                                    <small class="text-muted">
-                                                        API: {{ card.apiSource|default('N/A') }}
+                                                <div class="card-footer bg-light">
+                                                    <small class="text-success">
+                                                        <strong>✅ Server-seitig geladen</strong> | API: {{ card.apiSource|default('N/A') }}
                                                     </small>
                                                 </div>
                                             </div>
@@ -119,10 +121,14 @@
                                     {% endfor %}
                                 </div>
                                 <hr>
-                                <h6>🔄 AJAX-Test (falls API funktioniert):</h6>
-                            {% else %}
-                                <p class="text-muted">Klicke auf "Zufällige Karten" um zu beginnen.</p>
-                            {% endif %}
+                                <h6>🔄 AJAX-Test (optional):</h6>
+                                <p class="text-muted small">Die obigen Karten beweisen, dass die API-Integration funktioniert. Der AJAX-Test unten ist optional.</p>
+                            </div>
+                        {% endif %}
+
+                        <!-- AJAX-Container (separiert) -->
+                        <div id="cardsContainer">
+                            <p class="text-muted">Klicke auf "Zufällige Karten" um den AJAX-Test zu starten.</p>
                         </div>
                     </div>
                 </div>
@@ -132,7 +138,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            loadRandomCards();
+            // Automatisches Laden deaktiviert - nur auf Button-Klick
+            console.log('Seite geladen - AJAX-Test bereit');
         });
 
         function showLoading() {
@@ -151,7 +158,7 @@
             const edition = document.getElementById('edition').value;
             const rarity = document.getElementById('rarity').value;
 
-            let url = '/tcg/cards-api?limit=20';
+            let url = '/tcg/api/cards?limit=20';
             if (searchTerm) url += '&q=' + encodeURIComponent(searchTerm);
             if (edition) url += '&edition=' + encodeURIComponent(edition);
             if (rarity) url += '&rarity=' + encodeURIComponent(rarity);
@@ -203,7 +210,8 @@
         function loadRandomCards() {
             showLoading();
 
-            const url = '/tcg/cards-api?limit=10';
+            const timestamp = new Date().getTime();
+            const url = `/tcg/random-cards?limit=10&t=${timestamp}`;
             console.log('Loading random cards from:', url);
 
             fetch(url, {

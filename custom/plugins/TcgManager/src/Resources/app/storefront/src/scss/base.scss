@@ -1,0 +1,615 @@
+// TCG Manager Plugin - Custom Styling
+// Following Shopware 6 official documentation for plugin styling
+// Build: docker-compose exec shopware bin/build-storefront.sh
+
+// Shop Catalog Styling
+.tcg-shop-catalog {
+    .tcg-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid #dee2e6;
+
+        &:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-img-top-wrapper {
+            position: relative;
+            height: 250px;
+            overflow: hidden;
+
+            .tcg-card-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s ease;
+            }
+
+            &:hover .tcg-card-image {
+                transform: scale(1.05);
+            }
+
+            .card-img-placeholder {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background-color: #f8f9fa;
+                color: #6c757d;
+            }
+
+            .rarity-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                text-transform: uppercase;
+
+                &.rarity-ordinary { background-color: #6c757d; }
+                &.rarity-exceptional { background-color: #17a2b8; }
+                &.rarity-elite { background-color: #ffc107; color: #212529; }
+                &.rarity-unique { background-color: #dc3545; }
+            }
+        }
+
+        .card-stats {
+            .stat-badge {
+                display: inline-block;
+                background-color: #e9ecef;
+                color: #495057;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                margin-right: 4px;
+                margin-bottom: 2px;
+            }
+        }
+
+        .price {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+    }
+}
+
+// Card Detail Page Styling
+.tcg-card-detail {
+    .main-image-container {
+        text-align: center;
+
+        .main-card-image {
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .no-image-placeholder {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            color: #6c757d;
+        }
+    }
+
+    .image-variants {
+        .image-variant-btn {
+            &.active {
+                background-color: #0d6efd;
+                color: white;
+                border-color: #0d6efd;
+            }
+        }
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+
+            .stat-icon {
+                font-size: 1.5rem;
+                margin-right: 10px;
+            }
+
+            .stat-info {
+                .stat-label {
+                    font-size: 0.8rem;
+                    color: #6c757d;
+                    margin-bottom: 2px;
+                }
+
+                .stat-value {
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    color: #212529;
+                }
+            }
+        }
+    }
+
+    .thresholds-display {
+        .threshold-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 8px;
+            margin-bottom: 4px;
+
+            &.threshold-fire { background-color: #dc3545; color: white; }
+            &.threshold-water { background-color: #0dcaf0; color: #212529; }
+            &.threshold-earth { background-color: #198754; color: white; }
+            &.threshold-air { background-color: #6f42c1; color: white; }
+        }
+    }
+
+    .rules-text, .flavor-text {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .tcg-card-small {
+        .card-img-placeholder-small {
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+    }
+}
+
+// Categories Page Styling
+.tcg-shop-categories {
+    .card {
+        transition: transform 0.2s ease;
+
+        &:hover {
+            transform: translateY(-3px);
+        }
+    }
+
+    .list-group-item {
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: #f8f9fa;
+        }
+    }
+}
+
+// ⚠️ UNGELÖST: 4K-Display Layout-Optimierung (2024-12-29)
+//
+// PROBLEM 1: Bootstrap-Grid funktioniert nicht
+// - HTML: <div class="row"> + <div class="col-lg-6"> (korrekt)
+// - Verhalten: Spalten stapeln sich vertikal statt horizontal
+// - Alle CSS-Override-Versuche mit !important erfolglos
+//
+// PROBLEM 2: Card Browser nach rechts versetzt
+// - Überschrift, Text, Back-Button: korrekt ausgerichtet
+// - Card Browser: nach rechts versetzt, nicht bündig
+// - Debug-Rahmen erscheinen NUR innerhalb Card Browser
+//
+// VERMUTUNG: Shopware-spezifische CSS-Klassen überschreiben Bootstrap
+//
+// ERFOLGLOSE LÖSUNGSVERSUCHE:
+// 1. Einfache Selektoren: .drag-drop-container .row
+// 2. Starke Selektoren: .account-content .drag-drop-container .row
+// 3. ULTRA-STRONG: Alle Parent-Container-Kombinationen
+// 4. MEGA-STRONG: Mit Position- und Transform-Properties
+// 5. Minimalistisch: Nur nötigste CSS-Regeln
+// 6. Gezielt: Spezifische Card Browser Container-Fixes
+//
+// NÄCHSTE SCHRITTE:
+// - Browser DevTools für detaillierte CSS-Analyse
+// - Shopware-spezifische CSS-Klassen identifizieren
+// - JavaScript-Lösung als Alternative
+// - Template-Umstrukturierung erwägen
+
+// TODO: Bootstrap Grid Fix (alle Versuche erfolglos)
+// .drag-drop-container .row {
+//     display: flex !important;
+//     flex-wrap: wrap !important;
+// }
+//
+// .drag-drop-container .row .col-lg-6 {
+//     flex: 0 0 50% !important;
+//     max-width: 50% !important;
+// }
+
+// TODO: Card Browser Alignment (alle Versuche erfolglos)
+// .card-browser-section {
+//     margin-left: 0 !important;
+//     margin-right: 0 !important;
+//     padding-left: 0 !important;
+//     padding-right: 0 !important;
+// }
+
+// ===== FUNKTIONSFÄHIGE STYLES (behalten) =====
+
+// Draggable Cards
+.draggable-cards {
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background-color: #f8f9fa;
+}
+
+.draggable-card {
+    cursor: grab;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.draggable-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-color: #007bff;
+}
+
+.draggable-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.draggable-card:active {
+    cursor: grabbing;
+}
+
+// Drop Zone Styles
+.drop-zone {
+    border: 3px dashed #dee2e6;
+    transition: all 0.3s ease;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drop-zone.drag-over {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+    transform: scale(1.02);
+}
+
+.drop-zone-icon {
+    transition: all 0.3s ease;
+}
+
+.drop-zone.drag-over .drop-zone-icon {
+    transform: scale(1.2);
+}
+
+// Collection Cards
+.collection-card {
+    border: 2px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+.collection-card:hover {
+    border-color: #007bff;
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.quantity-badge {
+    position: relative;
+}
+
+.quantity-badge .badge {
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+}
+
+.card-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+// Collection Stats
+.collection-stats .stat-item {
+    text-align: center;
+}
+
+.collection-stats .stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.collection-stats .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+// Card Stats
+.card-stats {
+    font-size: 0.8rem;
+}
+
+.card-stats .row > div {
+    padding: 0.25rem;
+}
+
+// Large Screen Content Optimization
+@media (min-width: 1920px) {
+    .drag-drop-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .draggable-cards {
+        max-height: 40vh;
+    }
+
+    .collection-cards-grid {
+        max-height: 50vh;
+    }
+}
+
+// Ultra-wide screen support
+@media (min-width: 2560px) {
+    .drag-drop-container {
+        max-width: 2000px;
+        padding: 0 3rem;
+    }
+
+    // More cards per row on ultra-wide screens
+    .draggable-cards .col-md-6.col-lg-4 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+
+    .collection-cards-grid .col-md-6.col-lg-4 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+}
+
+// Animation for successful drops
+@keyframes dropSuccess {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.drop-success {
+    animation: dropSuccess 0.3s ease;
+}
+
+// Badge styling for elements
+.badge-secondary {
+    background-color: #6c757d;
+}
+
+// Notification positioning
+.position-fixed {
+    position: fixed !important;
+}
+
+// General TCG Plugin Styles for all pages
+.tcg-page-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+// Collections Overview Grid
+.collections-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.collection-overview-card {
+    border: 2px solid #e9ecef;
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.collection-overview-card:hover {
+    border-color: #007bff;
+    transform: translateY(-4px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+}
+
+// Deck Overview Grid
+.decks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.deck-overview-card {
+    border: 2px solid #e9ecef;
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.deck-overview-card:hover {
+    border-color: #28a745;
+    transform: translateY(-4px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+}
+
+// Responsive adjustments for all TCG pages
+@media (min-width: 2560px) {
+    .tcg-page-container {
+        max-width: 2000px;
+        padding: 0 3rem;
+    }
+
+    .collections-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+
+    .decks-grid {
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .tcg-page-container {
+        padding: 0 1rem;
+    }
+
+    .collections-grid,
+    .decks-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+// Collections Page Specific Styles
+.tcg-collections-page {
+    .collections-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    .collection-card {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        transition: box-shadow 0.15s ease-in-out;
+
+        &:hover {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+    }
+
+    .collection-name a {
+        text-decoration: none;
+        color: inherit;
+
+        &:hover {
+            color: #0d6efd;
+        }
+    }
+
+    .collection-stats {
+        display: flex;
+        gap: 1rem;
+        margin: 0.5rem 0;
+
+        .stat {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+    }
+
+    .collection-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .empty-state {
+        padding: 3rem 1rem;
+    }
+}
+
+// Decks Page Specific Styles
+.tcg-decks-page {
+    .decks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    .deck-card {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        transition: box-shadow 0.15s ease-in-out;
+
+        &:hover {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+    }
+
+    .deck-name a {
+        text-decoration: none;
+        color: inherit;
+
+        &:hover {
+            color: #0d6efd;
+        }
+    }
+
+    .deck-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 0.5rem 0;
+
+        .stat {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+    }
+
+    .deck-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .empty-state {
+        padding: 3rem 1rem;
+    }
+}

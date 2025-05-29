@@ -1,0 +1,300 @@
+{% extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_content %}
+<div class="tcg-shop-catalog">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="h2">🃏 TCG Kartenkatalog</h1>
+                    <div class="catalog-stats">
+                        <span class="badge bg-primary">{{ pagination.totalCards }} Karten verfügbar</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Sidebar Filters -->
+            <div class="col-lg-3 col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">🔍 Filter</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" action="{{ path('tcg.shop.catalog') }}" id="filterForm">
+                            <!-- Search -->
+                            <div class="mb-3">
+                                <label for="search" class="form-label">Kartenname</label>
+                                <input type="text" class="form-control" id="search" name="q"
+                                       value="{{ filters.searchTerm }}" placeholder="Kartenname suchen...">
+                            </div>
+
+                            <!-- Edition Filter -->
+                            {% if aggregations.get('editions') %}
+                            <div class="mb-3">
+                                <label for="edition" class="form-label">Edition</label>
+                                <select class="form-select" id="edition" name="edition">
+                                    <option value="">Alle Editionen</option>
+                                    {% for bucket in aggregations.get('editions').buckets %}
+                                        <option value="{{ bucket.key }}"
+                                                {% if filters.edition == bucket.key %}selected{% endif %}>
+                                            {{ bucket.key }} ({{ bucket.count }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            <!-- Rarity Filter -->
+                            {% if aggregations.get('rarities') %}
+                            <div class="mb-3">
+                                <label for="rarity" class="form-label">Seltenheit</label>
+                                <select class="form-select" id="rarity" name="rarity">
+                                    <option value="">Alle Seltenheiten</option>
+                                    {% for bucket in aggregations.get('rarities').buckets %}
+                                        <option value="{{ bucket.key }}"
+                                                {% if filters.rarity == bucket.key %}selected{% endif %}>
+                                            {{ bucket.key }} ({{ bucket.count }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            <!-- Card Type Filter -->
+                            {% if aggregations.get('cardTypes') %}
+                            <div class="mb-3">
+                                <label for="cardType" class="form-label">Kartentyp</label>
+                                <select class="form-select" id="cardType" name="type">
+                                    <option value="">Alle Typen</option>
+                                    {% for bucket in aggregations.get('cardTypes').buckets %}
+                                        {% if bucket.key %}
+                                        <option value="{{ bucket.key }}"
+                                                {% if filters.cardType == bucket.key %}selected{% endif %}>
+                                            {{ bucket.key }} ({{ bucket.count }})
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            <!-- Elements Filter -->
+                            {% if aggregations.get('elements') %}
+                            <div class="mb-3">
+                                <label for="elements" class="form-label">Elemente</label>
+                                <select class="form-select" id="elements" name="elements">
+                                    <option value="">Alle Elemente</option>
+                                    {% for bucket in aggregations.get('elements').buckets %}
+                                        {% if bucket.key %}
+                                        <option value="{{ bucket.key }}"
+                                                {% if filters.elements == bucket.key %}selected{% endif %}>
+                                            {{ bucket.key }} ({{ bucket.count }})
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Filter anwenden</button>
+                                <a href="{{ path('tcg.shop.catalog') }}" class="btn btn-outline-secondary">Zurücksetzen</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9 col-md-8">
+                <!-- Sorting and View Options -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <form method="GET" action="{{ path('tcg.shop.catalog') }}" class="d-flex align-items-center">
+                            <!-- Preserve current filters -->
+                            {% if filters.searchTerm %}<input type="hidden" name="q" value="{{ filters.searchTerm }}">{% endif %}
+                            {% if filters.edition %}<input type="hidden" name="edition" value="{{ filters.edition }}">{% endif %}
+                            {% if filters.rarity %}<input type="hidden" name="rarity" value="{{ filters.rarity }}">{% endif %}
+                            {% if filters.cardType %}<input type="hidden" name="type" value="{{ filters.cardType }}">{% endif %}
+                            {% if filters.elements %}<input type="hidden" name="elements" value="{{ filters.elements }}">{% endif %}
+
+                            <label for="sort" class="form-label me-2 mb-0">Sortierung:</label>
+                            <select class="form-select" id="sort" name="sort" onchange="this.form.submit()" style="width: auto;">
+                                <option value="name" {% if filters.sortBy == 'name' %}selected{% endif %}>Name A-Z</option>
+                                <option value="price_asc" {% if filters.sortBy == 'price_asc' %}selected{% endif %}>Preis aufsteigend</option>
+                                <option value="price_desc" {% if filters.sortBy == 'price_desc' %}selected{% endif %}>Preis absteigend</option>
+                                <option value="rarity" {% if filters.sortBy == 'rarity' %}selected{% endif %}>Seltenheit</option>
+                                <option value="edition" {% if filters.sortBy == 'edition' %}selected{% endif %}>Edition</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <span class="text-muted">
+                            Seite {{ pagination.currentPage }} von {{ pagination.totalPages }}
+                            ({{ pagination.totalCards }} Karten)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                {% if cardsWithMedia|length > 0 %}
+                <div class="row">
+                    {% for cardData in cardsWithMedia %}
+                    {% set card = cardData.card %}
+                    {% set productMedia = cardData.productMedia %}
+                    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 mb-4">
+                        <div class="card tcg-card h-100">
+                            <div class="card-img-top-wrapper">
+                                {% if productMedia and productMedia.b_f %}
+                                    <img src="{{ productMedia.b_f.url }}"
+                                         class="card-img-top tcg-card-image"
+                                         alt="{{ productMedia.b_f.alt }}"
+                                         loading="lazy">
+                                {% else %}
+                                    <div class="card-img-placeholder">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                        <p class="text-muted mt-2">Kein Bild verfügbar</p>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Rarity Badge -->
+                                {% if card.rarity %}
+                                <span class="badge rarity-badge rarity-{{ card.rarity|lower }}">
+                                    {{ card.rarity }}
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">{{ card.title }}</h6>
+
+                                <div class="card-meta mb-2">
+                                    {% if card.edition %}
+                                    <small class="text-muted d-block">📚 {{ card.edition }}</small>
+                                    {% endif %}
+                                    {% if card.cardType %}
+                                    <small class="text-muted d-block">🎴 {{ card.cardType }}</small>
+                                    {% endif %}
+                                    {% if card.elements %}
+                                    <small class="text-muted d-block">⚡ {{ card.elements }}</small>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Stats -->
+                                {% if card.cost or card.attack or card.defence %}
+                                <div class="card-stats mb-2">
+                                    {% if card.cost %}<span class="stat-badge">💎 {{ card.cost }}</span>{% endif %}
+                                    {% if card.attack %}<span class="stat-badge">⚔️ {{ card.attack }}</span>{% endif %}
+                                    {% if card.defence %}<span class="stat-badge">🛡️ {{ card.defence }}</span>{% endif %}
+                                </div>
+                                {% endif %}
+
+                                <div class="mt-auto">
+                                    {% if card.marketPrice %}
+                                    <div class="price mb-2">
+                                        <strong class="text-primary">{{ card.marketPrice|number_format(2, ',', '.') }}€</strong>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ path('tcg.shop.card.detail', {'cardId': card.id}) }}"
+                                           class="btn btn-outline-primary btn-sm">Details anzeigen</a>
+                                        {% if card.shopwareProductId %}
+                                        <button class="btn btn-primary btn-sm add-to-cart-btn"
+                                                data-card-id="{{ card.id }}">
+                                            🛒 In den Warenkorb
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if pagination.totalPages > 1 %}
+                <nav aria-label="Katalog Pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if pagination.currentPage > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ path('tcg.shop.catalog', filters|merge({'page': pagination.currentPage - 1})) }}">
+                                Vorherige
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for page in range(max(1, pagination.currentPage - 2), min(pagination.totalPages, pagination.currentPage + 2)) %}
+                        <li class="page-item {% if page == pagination.currentPage %}active{% endif %}">
+                            <a class="page-link" href="{{ path('tcg.shop.catalog', filters|merge({'page': page})) }}">
+                                {{ page }}
+                            </a>
+                        </li>
+                        {% endfor %}
+
+                        {% if pagination.currentPage < pagination.totalPages %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ path('tcg.shop.catalog', filters|merge({'page': pagination.currentPage + 1})) }}">
+                                Nächste
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4>Keine Karten gefunden</h4>
+                    <p class="text-muted">Versuchen Sie andere Suchkriterien oder entfernen Sie einige Filter.</p>
+                    <a href="{{ path('tcg.shop.catalog') }}" class="btn btn-primary">Alle Karten anzeigen</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add to cart functionality
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const cardId = this.dataset.cardId;
+
+            fetch(`/tcg/shop/add-to-cart/${cardId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ quantity: 1 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    this.innerHTML = '✅ Hinzugefügt';
+                    this.disabled = true;
+                    setTimeout(() => {
+                        this.innerHTML = '🛒 In den Warenkorb';
+                        this.disabled = false;
+                    }, 2000);
+                } else {
+                    alert('Fehler: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ein Fehler ist aufgetreten');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

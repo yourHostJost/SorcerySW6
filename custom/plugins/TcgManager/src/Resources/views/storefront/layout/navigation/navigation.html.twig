@@ -1,0 +1,29 @@
+{% sw_extends '@Storefront/storefront/layout/navigation/navigation.html.twig' %}
+
+{% block layout_main_navigation_menu %}
+    {{ parent() }}
+    
+    <!-- TCG Navigation Dropdown -->
+    {% if tcgNavigation is defined %}
+    <div class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" 
+           href="#" 
+           id="tcgNavDropdown" 
+           role="button" 
+           data-bs-toggle="dropdown" 
+           aria-expanded="false">
+            🃏 TCG Shop
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="tcgNavDropdown">
+            {% for key, item in tcgNavigation %}
+            <li>
+                <a class="dropdown-item{% if item.active %} active{% endif %}" 
+                   href="{{ item.url }}">
+                    {{ item.label }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+{% endblock %}

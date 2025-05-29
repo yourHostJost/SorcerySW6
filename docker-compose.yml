@@ -19,6 +19,7 @@ services:
     volumes:
       - shopware_data:/var/www/html
       - ./custom:/var/www/html/custom
+      - ./card_images:/var/www/html/card_images
     networks:
       - shopware_network
 

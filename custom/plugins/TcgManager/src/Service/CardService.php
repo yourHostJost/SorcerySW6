@@ -59,7 +59,8 @@ class CardService
         Context $context = null,
         ?string $elements = null,
         ?int $minCost = null,
-        ?int $maxCost = null
+        ?int $maxCost = null,
+        bool $randomOrder = false
     ): CardCollection {
         $context = $context ?? Context::createDefaultContext();
 
@@ -122,15 +123,56 @@ class CardService
         }
 
         // Sorting
-        $criteria->addSorting(new FieldSorting('title', FieldSorting::ASCENDING));
+        if ($randomOrder) {
+            // For random order, we'll shuffle after fetching
+            $criteria->addSorting(new FieldSorting('id', FieldSorting::ASCENDING));
+        } else {
+            $criteria->addSorting(new FieldSorting('title', FieldSorting::ASCENDING));
+        }
 
-        // Pagination
-        $criteria->setLimit($limit);
-        $criteria->setOffset($offset);
+        // For random order, fetch more cards and then randomly select
+        if ($randomOrder) {
+            // Fetch more cards to have a better random selection
+            $criteria->setLimit($limit * 5); // Fetch 5x more cards
+            $criteria->setOffset($offset);
+        } else {
+            // Normal pagination
+            $criteria->setLimit($limit);
+            $criteria->setOffset($offset);
+        }
 
         $result = $this->cardRepository->search($criteria, $context);
+        $entities = $result->getEntities();
 
-        return $result->getEntities();
+        // If random order is requested, shuffle and limit the results
+        if ($randomOrder && $entities->count() > 0) {
+            $cards = $entities->getElements();
+
+            // Use microtime for better randomness
+            mt_srand((int) (microtime(true) * 1000000));
+            shuffle($cards);
+
+            // Take only the requested number of cards
+            $cards = array_slice($cards, 0, $limit);
+
+            $entities = new CardCollection($cards);
+        }
+
+        return $entities;
+    }
+
+    /**
+     * Get total count of cards
+     */
+    public function getTotalCardCount(Context $context = null): int
+    {
+        $context = $context ?? Context::createDefaultContext();
+
+        $criteria = new Criteria();
+        $criteria->setLimit(1); // We only need the count
+
+        $result = $this->cardRepository->search($criteria, $context);
+        return $result->getTotal();
     }
 
     /**

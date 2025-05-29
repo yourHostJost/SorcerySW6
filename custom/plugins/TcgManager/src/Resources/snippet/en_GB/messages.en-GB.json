@@ -13,7 +13,8 @@
             "confirm": "Confirm",
             "close": "Close",
             "back": "Back",
-            "back_to_collections": "Back to Collections"
+            "back_to_collections": "Back to Collections",
+            "clear": "Clear"
         },
         "collections": {
             "title": "My Card Collections",
@@ -46,6 +47,8 @@
             "load_error": "Error loading collection",
             "total_cards": "Total Cards",
             "cards_in_collection": "Cards in Collection",
+            "unique_cards": "Unique Cards",
+            "total_value": "Total Value",
             "no_cards": {
                 "title": "No Cards in Collection",
                 "description": "This collection doesn't contain any cards yet. Add your first card."
@@ -125,6 +128,24 @@
             "add_to_cart": "Add to Cart",
             "add_first_card": "Add First Card",
             "add_coming_soon": "Add card - feature coming soon",
+            "browser": {
+                "title": "Card Browser",
+                "description": "Drag cards to the collection zone on the right",
+                "empty": "Click 'Load Random Cards' to get started"
+            },
+            "all_editions": "All Editions",
+            "all_rarities": "All Rarities",
+            "random": "Random Cards",
+            "load_random": "Load Random Cards",
+            "no_results": "No cards found",
+            "clear": "Clear Filters",
+            "drop_zone": {
+                "title": "Drop Cards Here",
+                "description": "Drag cards from the browser to add them to your collection",
+                "hint": "Drag & Drop",
+                "active": "Drop card here!",
+                "instruction": "Drag cards from the left browser here"
+            },
             "quantity": "Quantity",
             "condition": "Condition",
             "language": "Language",

@@ -133,6 +133,9 @@ class CollectionController extends StorefrontController
         // Load some sample cards directly for testing
         $context = Context::createDefaultContext();
 
+        // Check if this is a refresh request for new random cards
+        $isRefresh = $request->query->getBoolean('refresh', false);
+
         try {
             $sampleCards = $this->cardService->searchCards(
                 null, // searchTerm
@@ -149,7 +152,8 @@ class CollectionController extends StorefrontController
                 $context, // context
                 null, // elements
                 null, // minCost
-                null  // maxCost
+                null, // maxCost
+                true  // randomOrder - server-seitige Karten auch zufällig
             );
         } catch (\Exception $e) {
             // Fallback: create some dummy data to show the template works
@@ -415,8 +419,8 @@ class CollectionController extends StorefrontController
         }
     }
 
-    #[Route(path: '/tcg/cards-api', name: 'tcg.cards.api', methods: ['GET'], defaults: ['csrf_protected' => false, 'auth_required' => false])]
-    public function searchCardsPublic(Request $request): JsonResponse
+    #[Route(path: '/tcg/api/cards', name: 'tcg.api.cards', methods: ['GET'], defaults: ['_routeScope' => ['storefront'], 'XmlHttpRequest' => true])]
+    public function getCardsApi(Request $request): JsonResponse
     {
         // Note: This is a public API endpoint - no authentication required for card search
         // Remove any authentication checks for this public endpoint
@@ -443,6 +447,17 @@ class CollectionController extends StorefrontController
         // Create a default context for public API access
         $context = Context::createDefaultContext();
 
+        // Check if this is a request for random cards
+        $randomOrder = $request->query->getBoolean('random', false);
+
+        // For random requests, use a random offset to get different cards each time
+        if ($randomOrder) {
+            // Get total count first to calculate random offset
+            $totalCards = $this->cardService->getTotalCardCount($context);
+            $maxOffset = max(0, $totalCards - $limit);
+            $offset = $maxOffset > 0 ? rand(0, $maxOffset) : 0;
+        }
+
         $cards = $this->cardService->searchCards(
             $searchTerm,
             $edition,
@@ -458,7 +473,8 @@ class CollectionController extends StorefrontController
             $context,
             $elements,
             $minCost ?: null,
-            $maxCost ?: null
+            $maxCost ?: null,
+            $randomOrder
         );
 
         $cardsData = [];
@@ -519,5 +535,93 @@ class CollectionController extends StorefrontController
         $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Accept, X-Requested-With');
 
         return $response;
+    }
+
+    #[Route(path: '/tcg/random-cards', name: 'tcg.random.cards', methods: ['GET'], defaults: ['_routeScope' => ['storefront'], 'XmlHttpRequest' => true])]
+    public function getRandomCardsSimple(Request $request): JsonResponse
+    {
+        // Simple public endpoint without any authentication
+        $limit = $request->query->getInt('limit', 10);
+
+        try {
+            $context = Context::createDefaultContext();
+
+            // Get random cards using a simple approach
+            $cards = $this->cardService->searchCards(
+                null, null, null, null, null, null, null, null, false,
+                $limit, 0, $context, null, null, null, true
+            );
+
+            $cardsData = [];
+            foreach ($cards as $card) {
+                $cardsData[] = [
+                    'id' => $card->getId(),
+                    'title' => $card->getTitle(),
+                    'edition' => $card->getEdition(),
+                    'rarity' => $card->getRarity(),
+                    'cardType' => $card->getCardType(),
+                    'description' => $card->getDescription(),
+                    'cost' => $card->getCost(),
+                    'attack' => $card->getAttack(),
+                    'defence' => $card->getDefence(),
+                    'life' => $card->getLife(),
+                    'elements' => $card->getElements(),
+                    'subTypes' => $card->getSubTypes(),
+                    'artist' => $card->getArtist(),
+                    'flavorText' => $card->getFlavorText(),
+                    'finish' => $card->getFinish(),
+                    'apiSource' => $card->getApiSource(),
+                ];
+            }
+
+            $response = new JsonResponse([
+                'success' => true,
+                'data' => $cardsData,
+                'meta' => [
+                    'total' => count($cardsData),
+                    'limit' => $limit,
+                    'random' => true,
+                    'timestamp' => time()
+                ]
+            ]);
+
+            // Add CORS headers
+            $response->headers->set('Access-Control-Allow-Origin', '*');
+            $response->headers->set('Access-Control-Allow-Methods', 'GET');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Accept');
+
+            return $response;
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => 'Failed to load random cards',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    #[Route(path: '/tcg/demo/drag-drop', name: 'tcg.demo.drag.drop', methods: ['GET'])]
+    public function dragDropDemo(Request $request): Response
+    {
+        // Demo collection data
+        $demoCollection = [
+            'id' => 'demo-collection-001',
+            'name' => 'Demo Collection - Drag & Drop Test',
+            'description' => 'Test collection for demonstrating the drag & drop interface with real Sorcery cards.',
+            'isPublic' => true,
+            'isDefault' => false,
+            'createdAt' => date('Y-m-d H:i:s'),
+            'cardCount' => 0
+        ];
+
+        return $this->renderStorefront('@TcgManager/storefront/page/account/collection-detail.html.twig', [
+            'collectionId' => 'demo-collection-001',
+            'demoMode' => true,
+            'demoCollection' => $demoCollection,
+            'page' => [
+                'title' => 'TCG Manager - Drag & Drop Demo'
+            ]
+        ]);
     }
 }

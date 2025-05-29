@@ -94,6 +94,29 @@
             <argument type="service" id="logger"/>
         </service>
 
+        <!-- Media Upload Service -->
+        <service id="TcgManager\Service\MediaUploadService">
+            <argument type="service" id="media.repository"/>
+            <argument type="service" id="media_folder.repository"/>
+            <argument type="service" id="product_media.repository"/>
+            <argument type="service" id="Shopware\Core\Content\Media\MediaService"/>
+            <argument type="service" id="Shopware\Core\Content\Media\File\FileSaver"/>
+            <argument type="service" id="logger"/>
+            <argument>%kernel.project_dir%</argument>
+        </service>
+
+        <!-- Product Sync Service -->
+        <service id="TcgManager\Service\ProductSyncService">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <argument type="service" id="media.repository"/>
+            <argument type="service" id="tax.repository"/>
+            <argument type="service" id="sales_channel.repository"/>
+            <argument type="service" id="TcgManager\Service\MediaUploadService"/>
+            <argument type="service" id="logger"/>
+            <argument>%kernel.project_dir%</argument>
+        </service>
+
         <!-- Console Commands -->
         <service id="TcgManager\Command\ImportSorceryCardsCommand">
             <argument type="service" id="TcgManager\Service\SorceryApiImportService"/>
@@ -105,13 +128,60 @@
             <tag name="console.command"/>
         </service>
 
+        <service id="TcgManager\Command\SyncProductsCommand">
+            <argument type="service" id="TcgManager\Service\ProductSyncService"/>
+            <argument type="service" id="tcg_card.repository"/>
+            <tag name="console.command"/>
+        </service>
+
+
+
+        <service id="TcgManager\Command\UploadMediaCommand">
+            <argument type="service" id="TcgManager\Service\MediaUploadService"/>
+            <argument type="service" id="tcg_card.repository"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\TestImageMappingCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument>%kernel.project_dir%</argument>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\TestMediaUrlsCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\GetCardIdCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <tag name="console.command"/>
+        </service>
+
         <!-- Data Fixtures -->
         <service id="TcgManager\DataFixtures\CardFixtures">
             <argument type="service" id="TcgManager\Service\CardService"/>
             <tag name="tcg_manager.fixture"/>
         </service>
 
+        <!-- Storefront Controllers -->
+        <service id="TcgManager\Storefront\Controller\ShopController">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <argument type="service" id="TcgManager\Service\CardService"/>
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+            <tag name="controller.service_arguments"/>
+        </service>
+
         <!-- Event Subscribers -->
+        <service id="TcgManager\Subscriber\NavigationSubscriber">
+            <argument type="service" id="router"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
         <service id="TcgManager\Subscriber\CustomerRegistrationSubscriber">
             <argument type="service" id="TcgManager\Service\CollectionService"/>
             <tag name="kernel.event_subscriber"/>

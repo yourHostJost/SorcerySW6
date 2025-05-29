@@ -14,51 +14,87 @@ class Migration1700000006UpdateCardTableForSorcery extends MigrationStep
 
     public function update(Connection $connection): void
     {
-        // Add new columns for Sorcery: Contested Realm support
-        $sql = <<<SQL
-ALTER TABLE `tcg_card` 
-ADD COLUMN `cost` INT NULL AFTER `description`,
-ADD COLUMN `attack` INT NULL AFTER `cost`,
-ADD COLUMN `defence` INT NULL AFTER `attack`,
-ADD COLUMN `life` INT NULL AFTER `defence`,
-ADD COLUMN `thresholds` JSON NULL COMMENT 'Air, Earth, Fire, Water thresholds' AFTER `life`,
-ADD COLUMN `elements` VARCHAR(100) NULL COMMENT 'Card elements (Air, Earth, Fire, Water)' AFTER `thresholds`,
-ADD COLUMN `sub_types` VARCHAR(255) NULL COMMENT 'Card subtypes (Mortal, Beast, Dragon, etc.)' AFTER `elements`,
-ADD COLUMN `release_date` DATE NULL AFTER `sub_types`,
-ADD COLUMN `variant_slug` VARCHAR(100) NULL AFTER `release_date`,
-ADD COLUMN `finish` VARCHAR(50) NULL COMMENT 'Standard, Foil, etc.' AFTER `variant_slug`,
-ADD COLUMN `product` VARCHAR(50) NULL COMMENT 'Booster, Deck, Promo, etc.' AFTER `finish`,
-ADD COLUMN `artist` VARCHAR(255) NULL AFTER `product`,
-ADD COLUMN `flavor_text` LONGTEXT NULL AFTER `artist`,
-ADD COLUMN `type_text` VARCHAR(500) NULL AFTER `flavor_text`,
-ADD COLUMN `api_source` VARCHAR(50) NULL DEFAULT 'sorcery' COMMENT 'Source API (sorcery, mtg, etc.)' AFTER `stock_quantity`,
-ADD COLUMN `external_id` VARCHAR(100) NULL COMMENT 'External API identifier' AFTER `api_source`,
-ADD COLUMN `last_api_update` DATETIME(3) NULL AFTER `external_id`;
-SQL;
+        // Check if columns already exist before adding them
+        $columns = [
+            'cost' => 'INT NULL',
+            'attack' => 'INT NULL',
+            'defence' => 'INT NULL',
+            'life' => 'INT NULL',
+            'thresholds' => 'JSON NULL COMMENT \'Air, Earth, Fire, Water thresholds\'',
+            'elements' => 'VARCHAR(100) NULL COMMENT \'Card elements (Air, Earth, Fire, Water)\'',
+            'sub_types' => 'VARCHAR(255) NULL COMMENT \'Card subtypes (Mortal, Beast, Dragon, etc.)\'',
+            'release_date' => 'DATE NULL',
+            'variant_slug' => 'VARCHAR(100) NULL',
+            'finish' => 'VARCHAR(50) NULL COMMENT \'Standard, Foil, etc.\'',
+            'product' => 'VARCHAR(50) NULL COMMENT \'Booster, Deck, Promo, etc.\'',
+            'artist' => 'VARCHAR(255) NULL',
+            'flavor_text' => 'LONGTEXT NULL',
+            'type_text' => 'VARCHAR(500) NULL',
+            'api_source' => 'VARCHAR(50) NULL DEFAULT \'sorcery\' COMMENT \'Source API (sorcery, mtg, etc.)\'',
+            'external_id' => 'VARCHAR(100) NULL COMMENT \'External API identifier\'',
+            'last_api_update' => 'DATETIME(3) NULL'
+        ];
 
-        $connection->executeStatement($sql);
+        foreach ($columns as $columnName => $columnDefinition) {
+            $columnExists = $connection->fetchOne(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                 AND TABLE_NAME = 'tcg_card'
+                 AND COLUMN_NAME = ?",
+                [$columnName]
+            );
 
-        // Add new indexes for performance
-        $indexSql = <<<SQL
-ALTER TABLE `tcg_card`
-ADD INDEX `idx_tcg_card_cost` (`cost`),
-ADD INDEX `idx_tcg_card_elements` (`elements`),
-ADD INDEX `idx_tcg_card_sub_types` (`sub_types`),
-ADD INDEX `idx_tcg_card_finish` (`finish`),
-ADD INDEX `idx_tcg_card_product` (`product`),
-ADD INDEX `idx_tcg_card_artist` (`artist`),
-ADD INDEX `idx_tcg_card_api_source` (`api_source`),
-ADD INDEX `idx_tcg_card_external_id` (`external_id`),
-ADD INDEX `idx_tcg_card_last_update` (`last_api_update`),
-ADD UNIQUE KEY `uk_tcg_card_api` (`api_source`, `external_id`, `variant_slug`);
-SQL;
+            if (!$columnExists) {
+                $sql = "ALTER TABLE `tcg_card` ADD COLUMN `{$columnName}` {$columnDefinition}";
+                $connection->executeStatement($sql);
+            }
+        }
 
-        $connection->executeStatement($indexSql);
+        // Add new indexes for performance (check if they exist first)
+        $indexes = [
+            'idx_tcg_card_cost' => 'cost',
+            'idx_tcg_card_elements' => 'elements',
+            'idx_tcg_card_sub_types' => 'sub_types',
+            'idx_tcg_card_finish' => 'finish',
+            'idx_tcg_card_product' => 'product',
+            'idx_tcg_card_artist' => 'artist',
+            'idx_tcg_card_api_source' => 'api_source',
+            'idx_tcg_card_external_id' => 'external_id',
+            'idx_tcg_card_last_update' => 'last_api_update'
+        ];
+
+        foreach ($indexes as $indexName => $columnName) {
+            $indexExists = $connection->fetchOne(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                 AND TABLE_NAME = 'tcg_card'
+                 AND INDEX_NAME = ?",
+                [$indexName]
+            );
+
+            if (!$indexExists) {
+                $sql = "ALTER TABLE `tcg_card` ADD INDEX `{$indexName}` (`{$columnName}`)";
+                $connection->executeStatement($sql);
+            }
+        }
+
+        // Add unique key if it doesn't exist
+        $uniqueKeyExists = $connection->fetchOne(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = 'tcg_card'
+             AND INDEX_NAME = 'uk_tcg_card_api'"
+        );
+
+        if (!$uniqueKeyExists) {
+            $sql = "ALTER TABLE `tcg_card` ADD UNIQUE KEY `uk_tcg_card_api` (`api_source`, `external_id`, `variant_slug`)";
+            $connection->executeStatement($sql);
+        }
 
         // Update existing records to have api_source = 'legacy' for backward compatibility
         $updateSql = <<<SQL
-UPDATE `tcg_card` 
-SET `api_source` = 'legacy', 
+UPDATE `tcg_card`
+SET `api_source` = 'legacy',
     `cost` = `threshold_cost`,
     `last_api_update` = NOW()
 WHERE `api_source` IS NULL;

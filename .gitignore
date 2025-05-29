@@ -19,6 +19,10 @@
 # Custom plugins development (exclude from production)
 !/custom/plugins/TcgManager/
 
+# TCG Card Images (too large for Git - deploy separately)
+/card_images/
+/database-backups/
+
 # Docker
 /.docker/
 /docker-data/

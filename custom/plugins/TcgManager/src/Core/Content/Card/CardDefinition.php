@@ -77,6 +77,10 @@ class CardDefinition extends EntityDefinition
             (new FloatField('market_price', 'marketPrice')),
             (new IntField('stock_quantity', 'stockQuantity')),
 
+            // Shopware Product Integration
+            (new StringField('shopware_product_id', 'shopwareProductId')),
+            (new JsonField('image_mapping', 'imageMapping')),
+
             // API integration
             (new StringField('api_source', 'apiSource')),
             (new StringField('external_id', 'externalId')),

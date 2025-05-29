@@ -1,0 +1,30 @@
+{% sw_extends '@Storefront/storefront/layout/navigation/offcanvas.html.twig' %}
+
+{% block layout_navigation_offcanvas_navigation_home %}
+    {{ parent() }}
+    
+    <!-- TCG Navigation Section -->
+    {% if tcgNavigation is defined %}
+    <div class="tcg-navigation-section">
+        <div class="navigation-offcanvas-list-item">
+            <div class="nav-item nav-link navigation-offcanvas-link">
+                <span class="navigation-offcanvas-link-text">
+                    <strong>🃏 Trading Card Game</strong>
+                </span>
+            </div>
+        </div>
+        
+        {% for key, item in tcgNavigation %}
+        <div class="navigation-offcanvas-list-item">
+            <a class="nav-item nav-link navigation-offcanvas-link{% if item.active %} active{% endif %}" 
+               href="{{ item.url }}" 
+               title="{{ item.label }}">
+                <span class="navigation-offcanvas-link-text">{{ item.label }}</span>
+            </a>
+        </div>
+        {% endfor %}
+        
+        <hr class="navigation-offcanvas-separator">
+    </div>
+    {% endif %}
+{% endblock %}

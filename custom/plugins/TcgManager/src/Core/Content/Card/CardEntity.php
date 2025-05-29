@@ -144,6 +144,17 @@ class CardEntity extends Entity
      */
     protected $stockQuantity;
 
+    // Shopware Product Integration
+    /**
+     * @var string|null
+     */
+    protected $shopwareProductId;
+
+    /**
+     * @var array|null
+     */
+    protected $imageMapping;
+
     // API integration
     /**
      * @var string|null
@@ -527,5 +538,26 @@ class CardEntity extends Entity
     public function setLastApiUpdate(?\DateTimeInterface $lastApiUpdate): void
     {
         $this->lastApiUpdate = $lastApiUpdate;
+    }
+
+    // Shopware Product Integration getters and setters
+    public function getShopwareProductId(): ?string
+    {
+        return $this->shopwareProductId;
+    }
+
+    public function setShopwareProductId(?string $shopwareProductId): void
+    {
+        $this->shopwareProductId = $shopwareProductId;
+    }
+
+    public function getImageMapping(): ?array
+    {
+        return $this->imageMapping;
+    }
+
+    public function setImageMapping(?array $imageMapping): void
+    {
+        $this->imageMapping = $imageMapping;
     }
 }

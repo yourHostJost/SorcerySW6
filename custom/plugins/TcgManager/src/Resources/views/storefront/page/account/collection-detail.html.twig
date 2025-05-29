@@ -29,35 +29,165 @@
             </div>
 
             <div class="collection-detail-content" id="collectionContent" style="display: none;">
-                <!-- Collection Info -->
-                <div class="collection-info-card mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <h2 class="collection-name" id="collectionName"></h2>
-                                    <p class="collection-description text-muted" id="collectionDescription"></p>
-                                    <div class="collection-meta">
-                                        <span class="badge badge-info" id="collectionVisibility"></span>
-                                        <span class="badge badge-success" id="collectionDefault" style="display: none;">
-                                            {{ "tcg.collections.default"|trans }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 text-right">
-                                    <div class="collection-stats">
-                                        <div class="stat-item">
-                                            <span class="stat-value" id="totalCards">0</span>
-                                            <span class="stat-label">{{ "tcg.collections.total_cards"|trans }}</span>
+                <!-- Drag & Drop Layout -->
+                <div class="drag-drop-container">
+                    <!-- Card Browser - Full Width -->
+                    <div class="card-browser-section mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>🔍 {{ "tcg.cards.browser.title"|trans }}</h4>
+                                <p class="text-muted mb-0">{{ "tcg.cards.browser.description"|trans }}</p>
+                            </div>
+                                <div class="card-body">
+                                    <!-- Search & Filters -->
+                                    <div class="browser-filters mb-3">
+                                        <div class="row no-gutters">
+                                            <div class="col-md-6">
+                                                <input type="text" class="form-control" id="cardBrowserSearch"
+                                                       placeholder="{{ "tcg.cards.search_placeholder"|trans }}">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <select class="form-control" id="editionFilter">
+                                                    <option value="">{{ "tcg.cards.all_editions"|trans }}</option>
+                                                    <option value="Alpha">Alpha</option>
+                                                    <option value="Beta">Beta</option>
+                                                    <option value="Arthurian Legends">Arthurian Legends</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <select class="form-control" id="rarityFilter">
+                                                    <option value="">{{ "tcg.cards.all_rarities"|trans }}</option>
+                                                    <option value="Ordinary">Ordinary</option>
+                                                    <option value="Elite">Elite</option>
+                                                    <option value="Exceptional">Exceptional</option>
+                                                    <option value="Unique">Unique</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-12">
+                                                <button class="btn btn-primary btn-sm" onclick="searchCards()">
+                                                    🔍 {{ "tcg.common.search"|trans }}
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm" onclick="loadRandomCards()">
+                                                    🎲 {{ "tcg.cards.random"|trans }}
+                                                </button>
+                                                <button class="btn btn-info btn-sm" onclick="clearFilters()">
+                                                    🗑️ {{ "tcg.common.clear"|trans }}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="collection-actions mt-3">
-                                        <button class="btn btn-primary btn-sm" onclick="editCollection()">
-                                            {{ "tcg.common.edit"|trans }}
-                                        </button>
-                                        <button class="btn btn-success btn-sm" onclick="addCard()">
-                                            {{ "tcg.cards.add_to_collection"|trans }}
-                                        </button>
+
+                                    <!-- Draggable Cards -->
+                                    <div class="draggable-cards" id="draggableCards">
+                                        <div class="text-center text-muted">
+                                            <p>{{ "tcg.cards.browser.empty"|trans }}</p>
+                                            <button class="btn btn-outline-primary" onclick="loadRandomCards()">
+                                                {{ "tcg.cards.load_random"|trans }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Collection Management - Two Column Layout -->
+                    <div class="row">
+                        <!-- Left: Drop Zone & Collection Info -->
+                        <div class="col-lg-6">
+                        <div class="collection-drop-zone">
+                            <!-- Collection Info -->
+                            <div class="collection-info-card mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4>🗂️ <span id="collectionName"></span></h4>
+                                        <div class="collection-meta">
+                                            <span class="badge badge-info" id="collectionVisibility"></span>
+                                            <span class="badge badge-success" id="collectionDefault" style="display: none;">
+                                                {{ "tcg.collections.default"|trans }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="collection-description text-muted" id="collectionDescription"></p>
+                                        <div class="collection-stats">
+                                            <div class="row text-center">
+                                                <div class="col-4">
+                                                    <div class="stat-item">
+                                                        <span class="stat-value" id="totalCards">0</span>
+                                                        <span class="stat-label">{{ "tcg.collections.total_cards"|trans }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="stat-item">
+                                                        <span class="stat-value" id="uniqueCards">0</span>
+                                                        <span class="stat-label">{{ "tcg.collections.unique_cards"|trans }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="stat-item">
+                                                        <span class="stat-value" id="totalValue">€0</span>
+                                                        <span class="stat-label">{{ "tcg.collections.total_value"|trans }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Drop Zone -->
+                            <div class="drop-zone-container mb-4">
+                                <div class="card drop-zone" id="dropZone">
+                                    <div class="card-body text-center">
+                                        <div class="drop-zone-content">
+                                            <div class="drop-zone-icon">
+                                                <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                                            </div>
+                                            <h5 class="mt-3">{{ "tcg.cards.drop_zone.title"|trans }}</h5>
+                                            <p class="text-muted">{{ "tcg.cards.drop_zone.description"|trans }}</p>
+                                            <div class="drop-zone-hint">
+                                                <span class="badge badge-light">{{ "tcg.cards.drop_zone.hint"|trans }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="drop-zone-active" style="display: none;">
+                                            <div class="drop-zone-icon">
+                                                <i class="fas fa-plus-circle fa-3x text-success"></i>
+                                            </div>
+                                            <h5 class="mt-3 text-success">{{ "tcg.cards.drop_zone.active"|trans }}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Collection Cards -->
+                        <div class="col-lg-6">
+                            <div class="collection-cards-container">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">{{ "tcg.collections.cards_in_collection"|trans }}</h5>
+                                        <div class="collection-filters">
+                                            <input type="text" class="form-control form-control-sm"
+                                                   placeholder="{{ "tcg.cards.search_placeholder"|trans }}"
+                                                   id="cardSearch" onkeyup="filterCollectionCards()">
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="collection-cards-grid" id="collectionCardsGrid">
+                                            <!-- Collection cards will be loaded here -->
+                                        </div>
+
+                                        <div class="cards-empty" id="cardsEmpty" style="display: none;">
+                                            <div class="text-center text-muted">
+                                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                                <h5>{{ "tcg.collections.no_cards.title"|trans }}</h5>
+                                                <p>{{ "tcg.collections.no_cards.description"|trans }}</p>
+                                                <p class="small">{{ "tcg.cards.drop_zone.instruction"|trans }}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -65,31 +195,6 @@
                     </div>
                 </div>
 
-                <!-- Cards Grid -->
-                <div class="collection-cards">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3>{{ "tcg.collections.cards_in_collection"|trans }}</h3>
-                        <div class="collection-filters">
-                            <input type="text" class="form-control form-control-sm"
-                                   placeholder="{{ "tcg.cards.search_placeholder"|trans }}"
-                                   id="cardSearch" onkeyup="filterCards()">
-                        </div>
-                    </div>
-
-                    <div class="cards-grid" id="cardsGrid">
-                        <!-- Cards will be loaded here -->
-                    </div>
-
-                    <div class="cards-empty" id="cardsEmpty" style="display: none;">
-                        <div class="alert alert-info text-center">
-                            <h4>{{ "tcg.collections.no_cards.title"|trans }}</h4>
-                            <p>{{ "tcg.collections.no_cards.description"|trans }}</p>
-                            <button class="btn btn-primary" onclick="addCard()">
-                                {{ "tcg.cards.add_first_card"|trans }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div class="collection-detail-error" id="collectionError" style="display: none;">
@@ -116,13 +221,33 @@
         const collectionId = '{{ collectionId }}';
         let collectionData = null;
         let cardsData = [];
+        let collectionCards = [];
+        let availableCards = [];
 
         document.addEventListener('DOMContentLoaded', function() {
             loadCollectionDetails();
+            initializeDragAndDrop();
         });
 
         function loadCollectionDetails() {
             console.log('Loading collection details for ID:', collectionId);
+
+            // Check if we're in demo mode
+            {% if demoMode is defined and demoMode %}
+                // Demo mode - use provided demo data
+                collectionData = {{ demoCollection|json_encode|raw }};
+                displayCollectionInfo();
+                loadCollectionCards();
+
+                // Show demo notification
+                showNotification('🎮 Demo Mode: This is a demonstration of the drag & drop interface with real Sorcery cards!', 'info');
+
+                // Auto-load some random cards for demo
+                setTimeout(() => {
+                    loadRandomCards();
+                }, 1000);
+                return;
+            {% endif %}
 
             fetch(`/account/tcg/collections/${collectionId}/api`, {
                 method: 'GET',
@@ -170,9 +295,367 @@
         function loadCollectionCards() {
             // For now, show empty state
             document.getElementById('totalCards').textContent = '0';
+            document.getElementById('uniqueCards').textContent = '0';
+            document.getElementById('totalValue').textContent = '€0';
             document.getElementById('collectionLoading').style.display = 'none';
             document.getElementById('collectionContent').style.display = 'block';
             document.getElementById('cardsEmpty').style.display = 'block';
+        }
+
+        // Drag & Drop Functionality
+        function initializeDragAndDrop() {
+            const dropZone = document.getElementById('dropZone');
+
+            // Drop zone event listeners
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragenter', handleDragEnter);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleDrop);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            const dropZone = document.getElementById('dropZone');
+            dropZone.classList.add('drag-over');
+
+            // Show active state
+            dropZone.querySelector('.drop-zone-content').style.display = 'none';
+            dropZone.querySelector('.drop-zone-active').style.display = 'block';
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            const dropZone = document.getElementById('dropZone');
+
+            // Check if we're really leaving the drop zone
+            if (!dropZone.contains(e.relatedTarget)) {
+                dropZone.classList.remove('drag-over');
+
+                // Show default state
+                dropZone.querySelector('.drop-zone-content').style.display = 'block';
+                dropZone.querySelector('.drop-zone-active').style.display = 'none';
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropZone = document.getElementById('dropZone');
+            dropZone.classList.remove('drag-over');
+
+            // Show default state
+            dropZone.querySelector('.drop-zone-content').style.display = 'block';
+            dropZone.querySelector('.drop-zone-active').style.display = 'none';
+
+            // Get dropped card data
+            const cardId = e.dataTransfer.getData('text/card-id');
+            const cardData = e.dataTransfer.getData('text/card-data');
+
+            if (cardId && cardData) {
+                const card = JSON.parse(cardData);
+                addCardToCollection(card);
+            }
+        }
+
+        // Card Browser Functions
+        function searchCards() {
+            const searchTerm = document.getElementById('cardBrowserSearch').value;
+            const edition = document.getElementById('editionFilter').value;
+            const rarity = document.getElementById('rarityFilter').value;
+
+            let url = '/tcg/api/cards?limit=20';
+            if (searchTerm) url += '&q=' + encodeURIComponent(searchTerm);
+            if (edition) url += '&edition=' + encodeURIComponent(edition);
+            if (rarity) url += '&rarity=' + encodeURIComponent(rarity);
+
+            loadCardsFromAPI(url);
+        }
+
+        function loadRandomCards() {
+            const timestamp = new Date().getTime();
+            const url = `/tcg/random-cards?limit=12&t=${timestamp}`;
+            loadCardsFromAPI(url);
+        }
+
+        function clearFilters() {
+            document.getElementById('cardBrowserSearch').value = '';
+            document.getElementById('editionFilter').value = '';
+            document.getElementById('rarityFilter').value = '';
+            loadRandomCards();
+        }
+
+        function loadCardsFromAPI(url) {
+            console.log('Loading cards from:', url);
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    availableCards = data.data;
+                    displayAvailableCards(data.data);
+                } else {
+                    console.error('API error:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+            });
+        }
+
+        function displayAvailableCards(cards) {
+            const container = document.getElementById('draggableCards');
+
+            if (cards.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted">
+                        <p>{{ "tcg.cards.no_results"|trans }}</p>
+                        <button class="btn btn-outline-primary" onclick="loadRandomCards()">
+                            {{ "tcg.cards.load_random"|trans }}
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="row">';
+            cards.forEach(card => {
+                html += createDraggableCardHTML(card);
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function createDraggableCardHTML(card) {
+            return `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card draggable-card" draggable="true"
+                         data-card-id="${card.id}"
+                         data-card-data='${JSON.stringify(card)}'
+                         ondragstart="handleCardDragStart(event)">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1">${card.title}</h6>
+                            <div class="card-meta">
+                                <small class="text-muted">${card.edition} - ${card.rarity || 'N/A'}</small>
+                            </div>
+                            <div class="card-stats mt-2">
+                                <div class="row text-center">
+                                    <div class="col-3">
+                                        <small class="text-muted">Cost</small><br>
+                                        <strong>${card.cost || 'N/A'}</strong>
+                                    </div>
+                                    <div class="col-3">
+                                        <small class="text-muted">ATK</small><br>
+                                        <strong>${card.attack || 'N/A'}</strong>
+                                    </div>
+                                    <div class="col-3">
+                                        <small class="text-muted">DEF</small><br>
+                                        <strong>${card.defence || 'N/A'}</strong>
+                                    </div>
+                                    <div class="col-3">
+                                        <small class="text-muted">Life</small><br>
+                                        <strong>${card.life || 'N/A'}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            ${card.elements ? `<div class="mt-2"><span class="badge badge-secondary">${card.elements}</span></div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleCardDragStart(e) {
+            const cardId = e.target.closest('.draggable-card').dataset.cardId;
+            const cardData = e.target.closest('.draggable-card').dataset.cardData;
+
+            e.dataTransfer.setData('text/card-id', cardId);
+            e.dataTransfer.setData('text/card-data', cardData);
+            e.dataTransfer.effectAllowed = 'copy';
+
+            // Add visual feedback
+            e.target.closest('.draggable-card').classList.add('dragging');
+
+            setTimeout(() => {
+                e.target.closest('.draggable-card').classList.remove('dragging');
+            }, 100);
+        }
+
+        function addCardToCollection(card) {
+            console.log('Adding card to collection:', card);
+
+            // Check if card already exists in collection
+            const existingCard = collectionCards.find(c => c.id === card.id);
+            if (existingCard) {
+                existingCard.quantity = (existingCard.quantity || 1) + 1;
+                showNotification(`Increased quantity of "${card.title}" to ${existingCard.quantity}!`, 'success');
+            } else {
+                // Add new card to collection
+                const collectionCard = {
+                    ...card,
+                    quantity: 1,
+                    addedAt: new Date().toISOString()
+                };
+                collectionCards.push(collectionCard);
+                showNotification(`Added "${card.title}" to collection!`, 'success');
+            }
+
+            // Update collection stats
+            updateCollectionStats();
+
+            // Update collection display
+            displayCollectionCards();
+
+            // Hide empty state if visible
+            document.getElementById('cardsEmpty').style.display = 'none';
+        }
+
+        function updateCollectionStats() {
+            const totalCards = collectionCards.reduce((sum, card) => sum + (card.quantity || 1), 0);
+            const uniqueCards = collectionCards.length;
+            const totalValue = collectionCards.reduce((sum, card) => {
+                const price = parseFloat(card.marketPrice || 0);
+                const quantity = card.quantity || 1;
+                return sum + (price * quantity);
+            }, 0);
+
+            document.getElementById('totalCards').textContent = totalCards;
+            document.getElementById('uniqueCards').textContent = uniqueCards;
+            document.getElementById('totalValue').textContent = `€${totalValue.toFixed(2)}`;
+        }
+
+        function displayCollectionCards() {
+            const container = document.getElementById('collectionCardsGrid');
+
+            if (collectionCards.length === 0) {
+                document.getElementById('cardsEmpty').style.display = 'block';
+                container.innerHTML = '';
+                return;
+            }
+
+            document.getElementById('cardsEmpty').style.display = 'none';
+
+            let html = '<div class="row">';
+            collectionCards.forEach(card => {
+                html += createCollectionCardHTML(card);
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function createCollectionCardHTML(card) {
+            return `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card collection-card">
+                        <div class="card-body p-2">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">${card.title}</h6>
+                                <div class="quantity-badge">
+                                    <span class="badge badge-primary">${card.quantity || 1}x</span>
+                                </div>
+                            </div>
+                            <div class="card-meta">
+                                <small class="text-muted">${card.edition} - ${card.rarity || 'N/A'}</small>
+                            </div>
+                            <div class="card-stats mt-2">
+                                <div class="row text-center">
+                                    <div class="col-3">
+                                        <small class="text-muted">Cost</small><br>
+                                        <strong>${card.cost || 'N/A'}</strong>
+                                    </div>
+                                    <div class="col-3">
+                                        <small class="text-muted">ATK</small><br>
+                                        <strong>${card.attack || 'N/A'}</strong>
+                                    </div>
+                                    <div class="col-3">
+                                        <small class="text-muted">DEF</small><br>
+                                        <strong>${card.defence || 'N/A'}</strong>
+                                    </div>
+                                    <div class="col-3">
+                                        <small class="text-muted">Life</small><br>
+                                        <strong>${card.life || 'N/A'}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            ${card.elements ? `<div class="mt-2"><span class="badge badge-secondary">${card.elements}</span></div>` : ''}
+                            <div class="card-actions mt-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="changeCardQuantity('${card.id}', 1)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="changeCardQuantity('${card.id}', -1)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeCardFromCollection('${card.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function changeCardQuantity(cardId, change) {
+            const card = collectionCards.find(c => c.id === cardId);
+            if (!card) return;
+
+            card.quantity = Math.max(1, (card.quantity || 1) + change);
+
+            updateCollectionStats();
+            displayCollectionCards();
+
+            showNotification(`Updated quantity of "${card.title}" to ${card.quantity}`, 'info');
+        }
+
+        function removeCardFromCollection(cardId) {
+            const cardIndex = collectionCards.findIndex(c => c.id === cardId);
+            if (cardIndex === -1) return;
+
+            const card = collectionCards[cardIndex];
+            collectionCards.splice(cardIndex, 1);
+
+            updateCollectionStats();
+            displayCollectionCards();
+
+            showNotification(`Removed "${card.title}" from collection`, 'warning');
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
         }
 
         function showError(message) {
@@ -186,57 +669,21 @@
         }
 
         function addCard() {
-            alert('{{ "tcg.cards.add_coming_soon"|trans }}');
+            loadRandomCards();
         }
 
-        function filterCards() {
-            // TODO: Implement card filtering
+        function filterCollectionCards() {
+            // TODO: Implement collection card filtering
         }
     </script>
 
-    <style>
-        .collection-info-card .card {
-            border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
+    <!--
+    ⚠️ LAYOUT-PROBLEM (2024-12-29):
+    - Bootstrap-Grid (Zeile 97-195) funktioniert nicht: col-lg-6 stapelt vertikal
+    - Card Browser (Zeile 60-90) nach rechts versetzt, nicht bündig mit Überschrift
+    - SCSS-System funktioniert (base.scss), aber CSS-Overrides erfolglos
+    - Alle Lösungsversuche dokumentiert in PROJECT_INFO.md
+    - Demo-URL: http://localhost/tcg/demo/drag-drop
+    -->
 
-        .collection-stats .stat-item {
-            text-align: center;
-        }
-
-        .collection-stats .stat-value {
-            display: block;
-            font-size: 2rem;
-            font-weight: bold;
-            color: #007bff;
-        }
-
-        .collection-stats .stat-label {
-            display: block;
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .collection-filters {
-            width: 250px;
-        }
-
-        @media (max-width: 768px) {
-            .collection-filters {
-                width: 100%;
-                margin-top: 1rem;
-            }
-
-            .d-flex.justify-content-between {
-                flex-direction: column;
-            }
-        }
-    </style>
 {% endblock %}

@@ -1,0 +1,332 @@
+{% extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_content %}
+<div class="tcg-card-detail">
+    <div class="container-fluid">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('frontend.home.page') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('tcg.shop.catalog') }}">TCG Katalog</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ card.title }}</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <!-- Card Images -->
+            <div class="col-lg-6 mb-4">
+                <div class="card-images">
+                    <!-- Main Image Display -->
+                    <div class="main-image-container mb-3">
+                        {% if productMedia and productMedia.b_f %}
+                            <img id="mainCardImage"
+                                 src="{{ productMedia.b_f.url }}"
+                                 class="img-fluid main-card-image"
+                                 alt="{{ productMedia.b_f.alt }}">
+                        {% else %}
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-image fa-5x text-muted"></i>
+                                <p class="text-muted mt-3">Kein Bild verfügbar</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Image Variants -->
+                    {% if productMedia|length > 0 %}
+                    <div class="image-variants">
+                        <h6>Verfügbare Varianten:</h6>
+                        <div class="d-flex gap-2 flex-wrap">
+                            {% for finishCode, mediaData in productMedia %}
+                                <button class="btn btn-outline-secondary btn-sm image-variant-btn"
+                                        data-image="{{ mediaData.url }}"
+                                        data-finish="{{ mediaData.finish }}">
+                                    {{ mediaData.finish }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Card Information -->
+            <div class="col-lg-6">
+                <div class="card-info">
+                    <!-- Title and Rarity -->
+                    <div class="card-header-info mb-4">
+                        <h1 class="card-title">{{ card.title }}</h1>
+                        {% if card.rarity %}
+                        <span class="badge rarity-badge rarity-{{ card.rarity|lower }} fs-6">
+                            {{ card.rarity }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Basic Info -->
+                    <div class="card-basic-info mb-4">
+                        <div class="row">
+                            {% if card.edition %}
+                            <div class="col-md-6 mb-2">
+                                <strong>📚 Edition:</strong> {{ card.edition }}
+                            </div>
+                            {% endif %}
+                            {% if card.cardType %}
+                            <div class="col-md-6 mb-2">
+                                <strong>🎴 Typ:</strong> {{ card.cardType }}
+                            </div>
+                            {% endif %}
+                            {% if card.elements %}
+                            <div class="col-md-6 mb-2">
+                                <strong>⚡ Elemente:</strong> {{ card.elements }}
+                            </div>
+                            {% endif %}
+                            {% if card.artist %}
+                            <div class="col-md-6 mb-2">
+                                <strong>🎨 Künstler:</strong> {{ card.artist }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Game Stats -->
+                    {% if card.cost or card.attack or card.defence or card.life %}
+                    <div class="card-stats mb-4">
+                        <h5>⚔️ Spielwerte</h5>
+                        <div class="stats-grid">
+                            {% if card.cost %}
+                            <div class="stat-item">
+                                <div class="stat-icon">💎</div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Kosten</div>
+                                    <div class="stat-value">{{ card.cost }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if card.attack %}
+                            <div class="stat-item">
+                                <div class="stat-icon">⚔️</div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Angriff</div>
+                                    <div class="stat-value">{{ card.attack }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if card.defence %}
+                            <div class="stat-item">
+                                <div class="stat-icon">🛡️</div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Verteidigung</div>
+                                    <div class="stat-value">{{ card.defence }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if card.life %}
+                            <div class="stat-item">
+                                <div class="stat-icon">❤️</div>
+                                <div class="stat-info">
+                                    <div class="stat-label">Leben</div>
+                                    <div class="stat-value">{{ card.life }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Thresholds -->
+                    {% if card.thresholds %}
+                    <div class="card-thresholds mb-4">
+                        <h5>🌟 Schwellenwerte</h5>
+                        <div class="thresholds-display">
+                            {% for element, value in card.thresholds %}
+                                <span class="threshold-badge threshold-{{ element|lower }}">
+                                    {{ element }}: {{ value }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Card Text -->
+                    {% if card.rulesText %}
+                    <div class="card-text mb-4">
+                        <h5>📜 Regeltext</h5>
+                        <div class="rules-text">
+                            {{ card.rulesText|nl2br }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if card.flavorText %}
+                    <div class="card-flavor mb-4">
+                        <h5>✨ Geschmackstext</h5>
+                        <div class="flavor-text fst-italic">
+                            {{ card.flavorText|nl2br }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Price and Purchase -->
+                    <div class="card-purchase">
+                        {% if card.marketPrice %}
+                        <div class="price-display mb-3">
+                            <span class="current-price h3 text-primary">
+                                {{ card.marketPrice|number_format(2, ',', '.') }}€
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        {% if card.stockQuantity %}
+                        <div class="stock-info mb-3">
+                            <span class="badge bg-success">
+                                📦 {{ card.stockQuantity }} auf Lager
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        {% if card.shopwareProductId %}
+                        <div class="purchase-actions">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <div class="input-group">
+                                        <button class="btn btn-outline-secondary" type="button" id="decreaseQty">-</button>
+                                        <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="{{ card.stockQuantity ?: 99 }}">
+                                        <button class="btn btn-outline-secondary" type="button" id="increaseQty">+</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <button class="btn btn-primary w-100 add-to-cart-btn"
+                                            data-card-id="{{ card.id }}">
+                                        🛒 In den Warenkorb
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            Diese Karte ist derzeit nicht als Produkt verfügbar.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Similar Cards -->
+        {% if similarCardsWithMedia|length > 0 %}
+        <div class="similar-cards mt-5">
+            <h3>Ähnliche Karten</h3>
+            <div class="row">
+                {% for similarCardData in similarCardsWithMedia %}
+                {% set similarCard = similarCardData.card %}
+                {% set similarMedia = similarCardData.productMedia %}
+                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-3">
+                    <div class="card tcg-card-small h-100">
+                        {% if similarMedia and similarMedia.b_f %}
+                            <img src="{{ similarMedia.b_f.url }}"
+                                 class="card-img-top"
+                                 alt="{{ similarMedia.b_f.alt }}"
+                                 style="height: 150px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-placeholder-small">
+                                <i class="fas fa-image text-muted"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body p-2">
+                            <h6 class="card-title small">{{ similarCard.title }}</h6>
+                            {% if similarCard.marketPrice %}
+                            <p class="card-text small text-primary mb-1">
+                                {{ similarCard.marketPrice|number_format(2, ',', '.') }}€
+                            </p>
+                            {% endif %}
+                            <a href="{{ path('tcg.shop.card.detail', {'cardId': similarCard.id}) }}"
+                               class="btn btn-outline-primary btn-sm w-100">Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Image variant switching
+    document.querySelectorAll('.image-variant-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const imagePath = this.dataset.image;
+            const mainImage = document.getElementById('mainCardImage');
+
+            if (mainImage && imagePath) {
+                mainImage.src = imagePath;
+            }
+
+            // Update active state
+            document.querySelectorAll('.image-variant-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Quantity controls
+    const decreaseBtn = document.getElementById('decreaseQty');
+    const increaseBtn = document.getElementById('increaseQty');
+    const quantityInput = document.getElementById('quantity');
+
+    if (decreaseBtn && increaseBtn && quantityInput) {
+        decreaseBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value);
+            const maxValue = parseInt(quantityInput.max);
+            if (currentValue < maxValue) {
+                quantityInput.value = currentValue + 1;
+            }
+        });
+    }
+
+    // Add to cart functionality
+    const addToCartBtn = document.querySelector('.add-to-cart-btn');
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', function() {
+            const cardId = this.dataset.cardId;
+            const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+
+            fetch(`/tcg/shop/add-to-cart/${cardId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ quantity: quantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    this.innerHTML = '✅ Hinzugefügt';
+                    this.disabled = true;
+                    setTimeout(() => {
+                        this.innerHTML = '🛒 In den Warenkorb';
+                        this.disabled = false;
+                    }, 2000);
+                } else {
+                    alert('Fehler: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ein Fehler ist aufgetreten');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
