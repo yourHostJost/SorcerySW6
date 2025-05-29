@@ -24,12 +24,12 @@ jobs:
           cd /var/www/SorcerySW6 || git clone https://github.com/yourHostJost/SorcerySW6.git /var/www/SorcerySW6
           cd /var/www/SorcerySW6
           git pull origin staging
-          docker compose down
-          docker compose pull
-          docker compose up -d
+          docker compose -f docker-compose.production.yml down
+          docker compose -f docker-compose.production.yml pull
+          docker compose -f docker-compose.production.yml up -d
 
-          # Wait for containers to start
-          sleep 30
+          # Wait for containers to start (increased time for production)
+          sleep 60
 
           # Configure Shopware and apply performance optimizations
           CONTAINER_NAME=$(docker ps --format "{{.Names}}" | grep shopware | head -1)
@@ -57,6 +57,6 @@ jobs:
 
     - name: Health Check
       run: |
-        sleep 30
+        sleep 60
         curl -f http://${{ secrets.HETZNER_SERVER_IP }} || exit 1
         echo "Health check passed!"
