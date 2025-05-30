@@ -59,6 +59,7 @@
         <service id="TcgManager\Storefront\Controller\CollectionController" public="true">
             <argument type="service" id="TcgManager\Service\CollectionService"/>
             <argument type="service" id="TcgManager\Service\CardService"/>
+            <argument type="service" id="product.repository"/>
             <call method="setContainer">
                 <argument type="service" id="service_container"/>
             </call>
@@ -156,6 +157,71 @@
 
         <service id="TcgManager\Command\GetCardIdCommand">
             <argument type="service" id="tcg_card.repository"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\FixDuplicateCardsCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <argument type="service" id="TcgManager\Service\CardService"/>
+            <argument type="service" id="TcgManager\Service\ProductSyncService"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\AnalyzeCardIdsCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\FixProductNumbersCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <argument type="service" id="TcgManager\Service\ProductSyncService"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\AnalyzeFoilsCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\AnalyzeMissingImagesCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\FixMissingImagesCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <argument type="service" id="TcgManager\Service\ProductSyncService"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\DebugCardMediaCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="product.repository"/>
+            <argument type="service" id="media.repository"/>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\TestImageMappingCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument>%kernel.project_dir%</argument>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\DebugImageUploadCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument type="service" id="TcgManager\Service\MediaUploadService"/>
+            <argument>%kernel.project_dir%</argument>
+            <tag name="console.command"/>
+        </service>
+
+        <service id="TcgManager\Command\FindMismatchedNamesCommand">
+            <argument type="service" id="tcg_card.repository"/>
+            <argument>%kernel.project_dir%</argument>
             <tag name="console.command"/>
         </service>
 

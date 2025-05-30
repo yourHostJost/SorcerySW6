@@ -38,7 +38,7 @@ class ShopController extends StorefrontController
     public function catalog(Request $request, SalesChannelContext $context): Response
     {
         $page = $request->query->getInt('page', 1);
-        $limit = 24; // Cards per page
+        $limit = $request->query->getInt('limit', 100); // Default: 100 cards per page, configurable via URL
         $offset = ($page - 1) * $limit;
 
         // Get filter parameters

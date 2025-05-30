@@ -2,6 +2,139 @@
 // Following Shopware 6 official documentation for plugin styling
 // Build: docker-compose exec shopware bin/build-storefront.sh
 
+// Authentic TCG Card Layout (2:3 ratio like real cards)
+.tcg-card-authentic {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #dee2e6;
+    background: white;
+
+    // Card aspect ratio: 2:3 (width:height) like real TCG cards
+    aspect-ratio: 2/3;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .card-image-section {
+        position: relative;
+        height: 66.67%; // 2/3 of the card shows the image
+        overflow: hidden;
+
+        .tcg-card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top; // Show top part of card image
+        }
+
+        .card-img-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #6c757d;
+        }
+
+        // Badges positioned on the image
+        .rarity-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 10;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+
+            &.rarity-ordinary { background-color: #6c757d; }
+            &.rarity-exceptional { background-color: #17a2b8; }
+            &.rarity-elite { background-color: #ffc107; color: #212529; }
+            &.rarity-unique { background-color: #dc3545; }
+        }
+
+        .quantity-badge {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            z-index: 10;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+        }
+    }
+
+    .card-stats-section {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 33.33%; // 1/3 of the card shows stats
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(5px);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+            line-height: 1.1;
+            color: #212529;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .card-meta {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .card-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            text-align: center;
+
+            .stat-item {
+                .stat-label {
+                    font-size: 0.6rem;
+                    color: #6c757d;
+                    line-height: 1;
+                    margin-bottom: 1px;
+                }
+
+                .stat-value {
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: #212529;
+                    line-height: 1;
+                }
+            }
+        }
+
+        .card-elements {
+            margin-top: 2px;
+
+            .element-badge {
+                font-size: 0.6rem;
+                padding: 1px 4px;
+                margin-right: 2px;
+            }
+        }
+    }
+}
+
 // Shop Catalog Styling
 .tcg-shop-catalog {
     .tcg-card {
@@ -611,5 +744,203 @@
 
     .empty-state {
         padding: 3rem 1rem;
+    }
+}
+
+// Drag & Drop Styles for Authentic Cards
+.tcg-card-authentic[draggable="true"] {
+    cursor: grab;
+
+    &:active {
+        cursor: grabbing;
+    }
+
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+}
+
+// Foil Effect for "_f" (Foil) Cards
+.tcg-foil-effect {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.1) 40%,
+            rgba(255, 255, 255, 0.3) 50%,
+            rgba(255, 255, 255, 0.1) 60%,
+            transparent 70%
+        );
+        transform: rotate(45deg);
+        animation: foilShine 3s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            135deg,
+            rgba(255, 215, 0, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 25%,
+            rgba(138, 43, 226, 0.1) 50%,
+            rgba(255, 255, 255, 0.05) 75%,
+            rgba(255, 215, 0, 0.1) 100%
+        );
+        opacity: 0.6;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .tcg-card-image {
+        filter: contrast(1.1) saturate(1.2) brightness(1.05);
+        transition: filter 0.3s ease;
+    }
+
+    &:hover {
+        .tcg-card-image {
+            filter: contrast(1.2) saturate(1.4) brightness(1.1);
+        }
+
+        &::before {
+            animation-duration: 1.5s;
+        }
+    }
+}
+
+@keyframes foilShine {
+    0% {
+        transform: rotate(45deg) translateX(-200%);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: rotate(45deg) translateX(200%);
+        opacity: 0;
+    }
+}
+
+// Holographic Rainbow Effect (Alternative for special foils)
+.tcg-holographic-effect {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            45deg,
+            #ff0000 0%,
+            #ff8000 14%,
+            #ffff00 28%,
+            #80ff00 42%,
+            #00ff00 57%,
+            #00ff80 71%,
+            #00ffff 85%,
+            #0080ff 100%
+        );
+        opacity: 0.15;
+        mix-blend-mode: overlay;
+        animation: rainbowShift 4s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .tcg-card-image {
+        filter: contrast(1.15) saturate(1.3) brightness(1.1);
+    }
+}
+
+@keyframes rainbowShift {
+    0%, 100% {
+        filter: hue-rotate(0deg);
+    }
+    50% {
+        filter: hue-rotate(180deg);
+    }
+}
+
+// Product Detail Page Specific Styles
+.tcg-card-detail {
+    .card-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+
+        .main-card-image {
+            transition: filter 0.3s ease;
+            border-radius: 12px;
+        }
+
+        // Apply foil effect only when class is added
+        &.tcg-foil-effect {
+            @extend .tcg-foil-effect;
+
+            .main-card-image {
+                filter: contrast(1.15) saturate(1.3) brightness(1.1);
+            }
+        }
+    }
+
+    .image-variant-btn {
+        transition: all 0.2s ease;
+
+        &.foil-variant {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            border-color: #ffd700;
+
+            &:hover {
+                background: linear-gradient(45deg, #ffed4e, #ffd700);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+            }
+        }
+
+        &.active {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+
+            &.foil-variant {
+                background: linear-gradient(45deg, #ffd700, #ffed4e);
+                border-color: #ffd700;
+                color: #333;
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            }
+        }
+    }
+
+    .no-image-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 400px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        border: 2px dashed #dee2e6;
     }
 }

@@ -18,17 +18,19 @@
                 <div class="card-images">
                     <!-- Main Image Display -->
                     <div class="main-image-container mb-3">
-                        {% if productMedia and productMedia.b_f %}
-                            <img id="mainCardImage"
-                                 src="{{ productMedia.b_f.url }}"
-                                 class="img-fluid main-card-image"
-                                 alt="{{ productMedia.b_f.alt }}">
-                        {% else %}
-                            <div class="no-image-placeholder">
-                                <i class="fas fa-image fa-5x text-muted"></i>
-                                <p class="text-muted mt-3">Kein Bild verfügbar</p>
-                            </div>
-                        {% endif %}
+                        <div id="cardImageWrapper" class="card-image-wrapper">
+                            {% if productMedia and productMedia.b_f %}
+                                <img id="mainCardImage"
+                                     src="{{ productMedia.b_f.url }}"
+                                     class="img-fluid main-card-image"
+                                     alt="{{ productMedia.b_f.alt }}">
+                            {% else %}
+                                <div class="no-image-placeholder">
+                                    <i class="fas fa-image fa-5x text-muted"></i>
+                                    <p class="text-muted mt-3">Kein Bild verfügbar</p>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <!-- Image Variants -->
@@ -37,10 +39,13 @@
                         <h6>Verfügbare Varianten:</h6>
                         <div class="d-flex gap-2 flex-wrap">
                             {% for finishCode, mediaData in productMedia %}
-                                <button class="btn btn-outline-secondary btn-sm image-variant-btn"
+                                {% set isFoilFinish = finishCode in ['b_f', 'bt_f', 'p_f', 'sk_f'] %}
+                                <button class="btn btn-outline-secondary btn-sm image-variant-btn{% if isFoilFinish %} foil-variant{% endif %}"
                                         data-image="{{ mediaData.url }}"
-                                        data-finish="{{ mediaData.finish }}">
-                                    {{ mediaData.finish }}
+                                        data-finish="{{ mediaData.finish }}"
+                                        data-finish-code="{{ finishCode }}"
+                                        data-is-foil="{{ isFoilFinish ? 'true' : 'false' }}">
+                                    {% if isFoilFinish %}✨{% endif %} {{ mediaData.finish }}
                                 </button>
                             {% endfor %}
                         </div>
@@ -254,14 +259,28 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Image variant switching
+    // Image variant switching with foil effect
     document.querySelectorAll('.image-variant-btn').forEach(button => {
         button.addEventListener('click', function() {
             const imagePath = this.dataset.image;
+            const isFoil = this.dataset.isFoil === 'true';
+            const finishCode = this.dataset.finishCode;
             const mainImage = document.getElementById('mainCardImage');
+            const imageWrapper = document.getElementById('cardImageWrapper');
 
             if (mainImage && imagePath) {
                 mainImage.src = imagePath;
+            }
+
+            // Toggle foil effect based on selected variant
+            if (imageWrapper) {
+                if (isFoil) {
+                    imageWrapper.classList.add('tcg-foil-effect');
+                    console.log(`✨ Foil effect activated for ${finishCode}`);
+                } else {
+                    imageWrapper.classList.remove('tcg-foil-effect');
+                    console.log(`🎴 Standard effect for ${finishCode}`);
+                }
             }
 
             // Update active state
@@ -269,6 +288,16 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
         });
     });
+
+    // Initialize with first foil variant if available
+    const firstFoilButton = document.querySelector('.image-variant-btn[data-is-foil="true"]');
+    const firstButton = document.querySelector('.image-variant-btn');
+
+    if (firstFoilButton) {
+        firstFoilButton.click();
+    } else if (firstButton) {
+        firstButton.click();
+    }
 
     // Quantity controls
     const decreaseBtn = document.getElementById('decreaseQty');

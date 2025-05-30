@@ -442,38 +442,104 @@
         }
 
         function createDraggableCardHTML(card) {
+            // Determine image and foil status
+            let imageUrl = null;
+            let imageAlt = card.title;
+            let isFoil = false;
+
+            if (card.productMedia) {
+                // Check for foil variants first (b_f, bt_f, p_f, sk_f)
+                const foilCodes = ['b_f', 'bt_f', 'p_f', 'sk_f'];
+                const standardCodes = ['b_s', 'bt_s', 'p_s', 'd_s', 'dk_s', 'sk_s'];
+
+                // Try foil variants first
+                for (const finishCode of foilCodes) {
+                    if (card.productMedia[finishCode]) {
+                        imageUrl = card.productMedia[finishCode].url;
+                        imageAlt = card.productMedia[finishCode].alt || card.title;
+                        isFoil = true;
+                        break;
+                    }
+                }
+
+                // If no foil found, try standard variants
+                if (!imageUrl) {
+                    for (const finishCode of standardCodes) {
+                        if (card.productMedia[finishCode]) {
+                            imageUrl = card.productMedia[finishCode].url;
+                            imageAlt = card.productMedia[finishCode].alt || card.title;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Fallback to primaryImageUrl if no productMedia found
+            if (!imageUrl && card.primaryImageUrl) {
+                imageUrl = card.primaryImageUrl;
+                // Check if primaryImageUrl contains foil indicators
+                isFoil = imageUrl.includes('_b_f.') || imageUrl.includes('_bt_f.') || imageUrl.includes('_p_f.') || imageUrl.includes('_sk_f.');
+            }
+
             return `
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card draggable-card" draggable="true"
+                    <div class="tcg-card-authentic" draggable="true"
                          data-card-id="${card.id}"
                          data-card-data='${JSON.stringify(card)}'
-                         ondragstart="handleCardDragStart(event)">
-                        <div class="card-body p-2">
-                            <h6 class="card-title mb-1">${card.title}</h6>
-                            <div class="card-meta">
-                                <small class="text-muted">${card.edition} - ${card.rarity || 'N/A'}</small>
-                            </div>
-                            <div class="card-stats mt-2">
-                                <div class="row text-center">
-                                    <div class="col-3">
-                                        <small class="text-muted">Cost</small><br>
-                                        <strong>${card.cost || 'N/A'}</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <small class="text-muted">ATK</small><br>
-                                        <strong>${card.attack || 'N/A'}</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <small class="text-muted">DEF</small><br>
-                                        <strong>${card.defence || 'N/A'}</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <small class="text-muted">Life</small><br>
-                                        <strong>${card.life || 'N/A'}</strong>
-                                    </div>
+                         ondragstart="handleCardDragStart(event)"
+                         style="cursor: grab;">
+
+                        <!-- Card Image Section (2/3 of card) -->
+                        <div class="card-image-section">
+                            ${imageUrl ? `
+                                <img src="${imageUrl}"
+                                     class="tcg-card-image"
+                                     alt="${imageAlt}"
+                                     loading="lazy">
+                            ` : `
+                                <div class="card-img-placeholder">
+                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                </div>
+                            `}
+
+                            <!-- Rarity Badge -->
+                            ${card.rarity ? `
+                                <span class="badge rarity-badge rarity-${card.rarity.toLowerCase()}">
+                                    ${card.rarity}
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <!-- Card Stats Section (1/3 of card) -->
+                        <div class="card-stats-section">
+                            <div class="card-title">${card.title}</div>
+                            <div class="card-meta">${card.edition} - ${card.rarity || 'N/A'}</div>
+
+                            <!-- Stats Grid -->
+                            <div class="card-stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-label">Cost</div>
+                                    <div class="stat-value">${card.cost || '-'}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">ATK</div>
+                                    <div class="stat-value">${card.attack || '-'}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">DEF</div>
+                                    <div class="stat-value">${card.defence || '-'}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Life</div>
+                                    <div class="stat-value">${card.life || '-'}</div>
                                 </div>
                             </div>
-                            ${card.elements ? `<div class="mt-2"><span class="badge badge-secondary">${card.elements}</span></div>` : ''}
+
+                            ${card.elements ? `
+                                <div class="card-elements">
+                                    <span class="badge badge-secondary element-badge">${card.elements}</span>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -481,18 +547,21 @@
         }
 
         function handleCardDragStart(e) {
-            const cardId = e.target.closest('.draggable-card').dataset.cardId;
-            const cardData = e.target.closest('.draggable-card').dataset.cardData;
+            const cardElement = e.target.closest('.tcg-card-authentic');
+            const cardId = cardElement.dataset.cardId;
+            const cardData = cardElement.dataset.cardData;
 
             e.dataTransfer.setData('text/card-id', cardId);
             e.dataTransfer.setData('text/card-data', cardData);
             e.dataTransfer.effectAllowed = 'copy';
 
             // Add visual feedback
-            e.target.closest('.draggable-card').classList.add('dragging');
+            cardElement.style.opacity = '0.5';
+            cardElement.style.transform = 'scale(0.95)';
 
             setTimeout(() => {
-                e.target.closest('.draggable-card').classList.remove('dragging');
+                cardElement.style.opacity = '1';
+                cardElement.style.transform = 'scale(1)';
             }, 100);
         }
 
@@ -560,51 +629,117 @@
         }
 
         function createCollectionCardHTML(card) {
+            // Determine image and foil status
+            let imageUrl = null;
+            let imageAlt = card.title;
+            let isFoil = false;
+
+            if (card.productMedia) {
+                // Check for foil variants first (b_f, bt_f, p_f, sk_f)
+                const foilCodes = ['b_f', 'bt_f', 'p_f', 'sk_f'];
+                const standardCodes = ['b_s', 'bt_s', 'p_s', 'd_s', 'dk_s', 'sk_s'];
+
+                // Try foil variants first
+                for (const finishCode of foilCodes) {
+                    if (card.productMedia[finishCode]) {
+                        imageUrl = card.productMedia[finishCode].url;
+                        imageAlt = card.productMedia[finishCode].alt || card.title;
+                        isFoil = true;
+                        break;
+                    }
+                }
+
+                // If no foil found, try standard variants
+                if (!imageUrl) {
+                    for (const finishCode of standardCodes) {
+                        if (card.productMedia[finishCode]) {
+                            imageUrl = card.productMedia[finishCode].url;
+                            imageAlt = card.productMedia[finishCode].alt || card.title;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Fallback to primaryImageUrl if no productMedia found
+            if (!imageUrl && card.primaryImageUrl) {
+                imageUrl = card.primaryImageUrl;
+                // Check if primaryImageUrl contains foil indicators
+                isFoil = imageUrl.includes('_b_f.') || imageUrl.includes('_bt_f.') || imageUrl.includes('_p_f.') || imageUrl.includes('_sk_f.');
+            }
+
             return `
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card collection-card">
-                        <div class="card-body p-2">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h6 class="card-title mb-0">${card.title}</h6>
-                                <div class="quantity-badge">
-                                    <span class="badge badge-primary">${card.quantity || 1}x</span>
+                    <div class="tcg-card-authentic collection-card">
+                        <!-- Card Image Section (2/3 of card) -->
+                        <div class="card-image-section">
+                            ${imageUrl ? `
+                                <img src="${imageUrl}"
+                                     class="tcg-card-image"
+                                     alt="${imageAlt}"
+                                     loading="lazy">
+                            ` : `
+                                <div class="card-img-placeholder">
+                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                </div>
+                            `}
+
+                            <!-- Quantity Badge -->
+                            <span class="badge badge-primary quantity-badge">
+                                ${card.quantity || 1}x
+                            </span>
+
+                            <!-- Rarity Badge -->
+                            ${card.rarity ? `
+                                <span class="badge rarity-badge rarity-${card.rarity.toLowerCase()}">
+                                    ${card.rarity}
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <!-- Card Stats Section (1/3 of card) -->
+                        <div class="card-stats-section">
+                            <div class="card-title">${card.title}</div>
+                            <div class="card-meta">${card.edition} - ${card.rarity || 'N/A'}</div>
+
+                            <!-- Stats Grid -->
+                            <div class="card-stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-label">Cost</div>
+                                    <div class="stat-value">${card.cost || '-'}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">ATK</div>
+                                    <div class="stat-value">${card.attack || '-'}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">DEF</div>
+                                    <div class="stat-value">${card.defence || '-'}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Life</div>
+                                    <div class="stat-value">${card.life || '-'}</div>
                                 </div>
                             </div>
-                            <div class="card-meta">
-                                <small class="text-muted">${card.edition} - ${card.rarity || 'N/A'}</small>
-                            </div>
-                            <div class="card-stats mt-2">
-                                <div class="row text-center">
-                                    <div class="col-3">
-                                        <small class="text-muted">Cost</small><br>
-                                        <strong>${card.cost || 'N/A'}</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <small class="text-muted">ATK</small><br>
-                                        <strong>${card.attack || 'N/A'}</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <small class="text-muted">DEF</small><br>
-                                        <strong>${card.defence || 'N/A'}</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <small class="text-muted">Life</small><br>
-                                        <strong>${card.life || 'N/A'}</strong>
-                                    </div>
+
+                            ${card.elements ? `
+                                <div class="card-elements">
+                                    <span class="badge badge-secondary element-badge">${card.elements}</span>
                                 </div>
-                            </div>
-                            ${card.elements ? `<div class="mt-2"><span class="badge badge-secondary">${card.elements}</span></div>` : ''}
-                            <div class="card-actions mt-2">
-                                <button class="btn btn-sm btn-outline-primary" onclick="changeCardQuantity('${card.id}', 1)">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="changeCardQuantity('${card.id}', -1)">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="removeCardFromCollection('${card.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Action buttons overlay -->
+                        <div class="card-actions" style="position: absolute; bottom: 4px; right: 4px; z-index: 10;">
+                            <button class="btn btn-xs btn-outline-primary" onclick="changeCardQuantity('${card.id}', 1)" style="padding: 2px 4px; font-size: 0.7rem;">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="btn btn-xs btn-outline-secondary" onclick="changeCardQuantity('${card.id}', -1)" style="padding: 2px 4px; font-size: 0.7rem;">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="btn btn-xs btn-outline-danger" onclick="removeCardFromCollection('${card.id}')" style="padding: 2px 4px; font-size: 0.7rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>

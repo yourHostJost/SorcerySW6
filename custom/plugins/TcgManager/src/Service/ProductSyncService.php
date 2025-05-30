@@ -169,6 +169,12 @@ class ProductSyncService
     {
         $productId = $card->getShopwareProductId();
 
+        // Map card images to finish variants
+        $imageMapping = $this->mapCardImages($card);
+
+        // Upload images to Shopware media
+        $uploadResult = $this->mediaUploadService->uploadCardImages($productId, $imageMapping, $context);
+
         // Update product data
         $updateData = [
             'id' => $productId,
@@ -192,13 +198,17 @@ class ProductSyncService
 
         $this->logger->info('Updated existing product for card', [
             'cardId' => $card->getId(),
-            'productId' => $productId
+            'productId' => $productId,
+            'imageMapping' => $imageMapping,
+            'uploadResult' => $uploadResult
         ]);
 
         return [
             'success' => true,
             'productId' => $productId,
             'cardId' => $card->getId(),
+            'imageMapping' => $imageMapping,
+            'uploadResult' => $uploadResult,
             'action' => 'updated'
         ];
     }
@@ -272,9 +282,40 @@ class ProductSyncService
      */
     private function normalizeCardName(string $cardName): string
     {
+        // Special mappings for problematic card names
+        $specialMappings = [
+            'Maelström' => 'maelstrom',
+            'Spire' => 'spire_lich',
+            'Valley' => 'rift_valley',
+            'Brocéliande' => 'broceliande',
+            'Hunter\'s Lodge' => 'hunters_lodge',
+            'Merlin\'s Tower' => 'merlins_tower',
+            'Wizard\'s Den' => 'wizards_den',
+            'Erik\'s Curiosa' => 'eriks_curiosa',
+            'Philosopher\'s Stone' => 'philosophers_stone',
+            'Älvalinne Dryads' => 'alvalinne_dryads',
+            'Fisherman\'s Family' => 'fishermans_family',
+            'Merlin\'s Staff' => 'merlins_staff',
+            'Grösse Poltergeist' => 'grosse_poltergeist',
+            'Mariner\'s Curse' => 'mariners_curse',
+            'Angel\'s Egg' => 'angels_egg',
+            'Devil\'s Egg' => 'devils_egg',
+            'A Midsummer Night\'s Dream' => 'a_midsummer_nights_dream',
+            'Castle\'s Ablaze!' => 'castles_ablaze',
+            'Hamlet\'s Ablaze!' => 'hamlets_ablaze',
+            'King\'s Council' => 'kings_council',
+            'Courtesan Thaïs' => 'courtesan_thais',
+            'Orb of Ba\'al Berith' => 'orb_of_baal_berith',
+        ];
+
+        // Check for special mapping first
+        if (isset($specialMappings[$cardName])) {
+            return $specialMappings[$cardName];
+        }
+
         // Convert to lowercase and replace spaces with underscores
         $normalized = strtolower($cardName);
-        $normalized = str_replace([' ', "'", '"', '/', '\\', ':', '?', '*', '!', '@', '#', '$', '%', '^', '&', '(', ')', '+', '=', '[', ']', '{', '}', '|', ';', ',', '.', '<', '>'], '_', $normalized);
+        $normalized = str_replace([' ', '-', "'", '"', '/', '\\', ':', '?', '*', '!', '@', '#', '$', '%', '^', '&', '(', ')', '+', '=', '[', ']', '{', '}', '|', ';', ',', '.', '<', '>'], '_', $normalized);
         // Remove multiple underscores
         $normalized = preg_replace('/_+/', '_', $normalized);
         // Remove leading/trailing underscores
@@ -290,7 +331,8 @@ class ProductSyncService
     {
         $edition = strtoupper(substr($card->getEdition(), 0, 3));
         $cardName = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $card->getTitle()), 0, 8));
-        $cardId = substr(str_replace('-', '', $card->getId()), 0, 8);
+        // Use full card ID (without dashes) to ensure uniqueness
+        $cardId = str_replace('-', '', $card->getId());
         return "TCG-{$edition}-{$cardName}-{$cardId}";
     }
 

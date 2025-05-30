@@ -10,6 +10,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Shopware\Core\Checkout\Cart\CartException;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use TcgManager\Service\CollectionService;
 use TcgManager\Service\CardService;
 
@@ -18,13 +20,16 @@ class CollectionController extends StorefrontController
 {
     private CollectionService $collectionService;
     private CardService $cardService;
+    private EntityRepository $productRepository;
 
     public function __construct(
         CollectionService $collectionService,
-        CardService $cardService
+        CardService $cardService,
+        EntityRepository $productRepository
     ) {
         $this->collectionService = $collectionService;
         $this->cardService = $cardService;
+        $this->productRepository = $productRepository;
     }
 
     private function denyAccessUnlessLoggedIn(SalesChannelContext $context): void
@@ -479,6 +484,32 @@ class CollectionController extends StorefrontController
 
         $cardsData = [];
         foreach ($cards as $card) {
+            // Load product media if available
+            $productMedia = [];
+            if ($card->getShopwareProductId()) {
+                $productCriteria = new Criteria([$card->getShopwareProductId()]);
+                $productCriteria->addAssociation('media.media');
+                $productResult = $this->productRepository->search($productCriteria, $context);
+                $product = $productResult->first();
+
+                if ($product && $product->getMedia()) {
+                    foreach ($product->getMedia() as $media) {
+                        $mediaEntity = $media->getMedia();
+                        if ($mediaEntity) {
+                            $finishCode = $media->getCustomFields()['tcg_finish_code'] ?? 'unknown';
+                            $finishName = $media->getCustomFields()['tcg_finish_name'] ?? 'Unknown';
+
+                            $productMedia[$finishCode] = [
+                                'url' => $mediaEntity->getUrl(),
+                                'finish' => $finishName,
+                                'alt' => $mediaEntity->getAlt() ?? $card->getTitle(),
+                                'title' => $mediaEntity->getTitle() ?? $card->getTitle()
+                            ];
+                        }
+                    }
+                }
+            }
+
             $cardsData[] = [
                 'id' => $card->getId(),
                 'title' => $card->getTitle(),
@@ -512,6 +543,11 @@ class CollectionController extends StorefrontController
                 'imageUrl' => $card->getImageUrl(),
                 'marketPrice' => $card->getMarketPrice(),
                 'stockQuantity' => $card->getStockQuantity(),
+                'shopwareProductId' => $card->getShopwareProductId(),
+
+                // Media URLs from Shopware
+                'productMedia' => $productMedia,
+                'primaryImageUrl' => isset($productMedia['b_f']) ? $productMedia['b_f']['url'] : null,
 
                 // API integration
                 'apiSource' => $card->getApiSource(),
@@ -554,6 +590,32 @@ class CollectionController extends StorefrontController
 
             $cardsData = [];
             foreach ($cards as $card) {
+                // Load product media if available
+                $productMedia = [];
+                if ($card->getShopwareProductId()) {
+                    $productCriteria = new Criteria([$card->getShopwareProductId()]);
+                    $productCriteria->addAssociation('media.media');
+                    $productResult = $this->productRepository->search($productCriteria, $context);
+                    $product = $productResult->first();
+
+                    if ($product && $product->getMedia()) {
+                        foreach ($product->getMedia() as $media) {
+                            $mediaEntity = $media->getMedia();
+                            if ($mediaEntity) {
+                                $finishCode = $media->getCustomFields()['tcg_finish_code'] ?? 'unknown';
+                                $finishName = $media->getCustomFields()['tcg_finish_name'] ?? 'Unknown';
+
+                                $productMedia[$finishCode] = [
+                                    'url' => $mediaEntity->getUrl(),
+                                    'finish' => $finishName,
+                                    'alt' => $mediaEntity->getAlt() ?? $card->getTitle(),
+                                    'title' => $mediaEntity->getTitle() ?? $card->getTitle()
+                                ];
+                            }
+                        }
+                    }
+                }
+
                 $cardsData[] = [
                     'id' => $card->getId(),
                     'title' => $card->getTitle(),
@@ -571,6 +633,9 @@ class CollectionController extends StorefrontController
                     'flavorText' => $card->getFlavorText(),
                     'finish' => $card->getFinish(),
                     'apiSource' => $card->getApiSource(),
+                    'shopwareProductId' => $card->getShopwareProductId(),
+                    'productMedia' => $productMedia,
+                    'primaryImageUrl' => isset($productMedia['b_f']) ? $productMedia['b_f']['url'] : null,
                 ];
             }
 
